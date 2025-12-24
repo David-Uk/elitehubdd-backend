@@ -1,0 +1,1252 @@
+openapi: 3.0.0
+info:
+  title: EliteHub Hotel Management API
+  description: API documentation for EliteHub Hotel Management System
+  version: 2.0.0
+servers:
+  - url: http://localhost:3000/api
+    description: Local Development Server
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Staff:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        fullName:
+          type: string
+          readOnly: true
+        role:
+          type: string
+          enum:
+            [
+              admin,
+              manager,
+              receptionist,
+              housekeeping,
+              restaurant_staff,
+              bar_staff,
+              maintenance,
+            ]
+        department:
+          type: string
+          enum: [reception, housekeeping, maintenance, management, restaurant]
+          description: "Legacy department code"
+        departmentId:
+          type: string
+          format: uuid
+          description: "New Department reference ID"
+        departmentInfo:
+          $ref: "#/components/schemas/Department"
+        position:
+          type: string
+        status:
+          type: string
+          enum: [active, inactive, suspended, disabled]
+        gender:
+          type: string
+          enum: [male, female]
+        address:
+          type: string
+        hireDate:
+          type: string
+          format: date
+        phoneNumber:
+          type: string
+        lastLogin:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: admin@elitehub.com
+        password:
+          type: string
+          format: password
+          example: Password123!
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+        - firstName
+        - lastName
+        - gender
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+          minLength: 8
+        firstName:
+          type: string
+        lastName:
+          type: string
+        fullName:
+          type: string
+          description: "Optional: Can provide instead of firstName/lastName"
+        phoneNumber:
+          type: string
+        role:
+          type: string
+          enum:
+            [
+              admin,
+              manager,
+              receptionist,
+              housekeeping,
+              restaurant_staff,
+              bar_staff,
+              maintenance,
+            ]
+        department:
+          type: string
+          enum: [reception, housekeeping, maintenance, management, restaurant]
+          description: "Legacy department code"
+        departmentId:
+          type: string
+          format: uuid
+          description: "New Department reference ID"
+        position:
+          type: string
+        status:
+          type: string
+          enum: [active, inactive, suspended, disabled]
+          default: active
+        gender:
+          type: string
+          enum: [male, female]
+        address:
+          type: string
+        hireDate:
+          type: string
+          format: date
+    ChangePasswordRequest:
+      type: object
+      required:
+        - oldPassword
+        - newPassword
+      properties:
+        oldPassword:
+          type: string
+          format: password
+        newPassword:
+          type: string
+          format: password
+          minLength: 8
+    Reservation:
+      type: object
+      properties:
+        guestId:
+          type: string
+          format: uuid
+        roomId:
+          type: string
+          format: uuid
+        checkInDate:
+          type: string
+          format: date-time
+        checkOutDate:
+          type: string
+          format: date-time
+        numberOfGuests:
+          type: integer
+    InventoryItem:
+      type: object
+      properties:
+        name:
+          type: string
+        category:
+          type: string
+        costPrice:
+          type: number
+        sellingPrice:
+          type: number
+        sku:
+          type: string
+        reorderLevel:
+          type: integer
+    MenuItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        category:
+          type: string
+          enum:
+            [
+              appetizer,
+              main_course,
+              dessert,
+              beverage,
+              breakfast,
+              lunch,
+              dinner,
+            ]
+        price:
+          type: number
+        description:
+          type: string
+        isAvailable:
+          type: boolean
+    CreateOrderRequest:
+      type: object
+      required:
+        - items
+      properties:
+        tableNumber:
+          type: string
+          description: Required for dine_in
+        orderType:
+          type: string
+          enum: [dine_in, room_service, takeaway]
+          default: dine_in
+        reservationId:
+          type: string
+          format: uuid
+        specialInstructions:
+          type: string
+        items:
+          type: array
+          items:
+            type: object
+            required:
+              - menuItemId
+              - quantity
+            properties:
+              menuItemId:
+                type: string
+                format: uuid
+              quantity:
+                type: integer
+                minimum: 1
+              specialInstructions:
+                type: string
+    RestaurantOrderItem:
+      type: object
+      properties:
+        menuItemId:
+          type: string
+          format: uuid
+        quantity:
+          type: integer
+        unitPrice:
+          type: number
+        totalPrice:
+          type: number
+        specialInstructions:
+          type: string
+    RestaurantOrder:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        orderNumber:
+          type: string
+        tableNumber:
+          type: string
+        status:
+          type: string
+          enum: [pending, preparing, ready, served, completed, cancelled]
+        paymentStatus:
+          type: string
+          enum: [pending, paid, cancelled]
+        totalAmount:
+          type: number
+        subtotal:
+          type: number
+        tax:
+          type: number
+        serviceCharge:
+          type: number
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/RestaurantOrderItem"
+        staff:
+          $ref: "#/components/schemas/Staff"
+        createdAt:
+          type: string
+          format: date-time
+        supplier:
+          type: string
+    Department:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        code:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [active, inactive]
+        headOfDepartment:
+          type: string
+          format: uuid
+        budget:
+          type: number
+        contactEmail:
+          type: string
+          format: email
+        contactPhone:
+          type: string
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        isActive:
+          type: boolean
+        role:
+          type: string
+          enum: [user, admin, moderator]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    CreateDepartmentRequest:
+      type: object
+      required:
+        - name
+        - code
+      properties:
+        name:
+          type: string
+          example: "Security"
+        code:
+          type: string
+          example: "security"
+        description:
+          type: string
+        status:
+          type: string
+          enum: [active, inactive]
+        headOfDepartment:
+          type: string
+          format: uuid
+        budget:
+          type: number
+        contactEmail:
+          type: string
+        contactPhone:
+          type: string
+security:
+  - bearerAuth: []
+paths:
+  /auth/login:
+    post:
+      summary: Login staff
+      description: Authenticate a staff member and receive a JWT token.
+      tags: [Auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        200:
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Login successful
+                  data:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                      staff:
+                        $ref: "#/components/schemas/Staff"
+        401:
+          description: Invalid credentials
+  /auth/register:
+    post:
+      summary: Register new staff (Admin only)
+      description: Create a new staff account. Requires Admin privileges.
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        201:
+          description: Registration successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Staff registered successfully
+                  data:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                      staff:
+                        $ref: "#/components/schemas/Staff"
+        400:
+          description: Validation error or User already exists
+  /auth/profile:
+    get:
+      summary: Get current staff profile
+      description: Retrieve the profile information of the currently logged-in staff member.
+      tags: [Auth]
+      responses:
+        200:
+          description: Profile data retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: "#/components/schemas/Staff"
+  /auth/change-password:
+    post:
+      summary: Change password
+      description: Change the password for the current user.
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangePasswordRequest"
+      responses:
+        200:
+          description: Password changed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Password changed successfully
+        400:
+          description: Invalid password provided or validation error
+
+  # --- DEPARTMENT ENDPOINTS ---
+  /departments:
+    get:
+      summary: Get all departments
+      description: Retrieve a list of all hotel departments.
+      tags: [Departments]
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [active, inactive]
+        - in: query
+          name: includeInactive
+          schema:
+            type: boolean
+      responses:
+        200:
+          description: List of departments
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Department"
+    post:
+      summary: Create new department (Admin only)
+      description: Create a new hotel department. Restricted to Admin role.
+      tags: [Departments]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDepartmentRequest"
+      responses:
+        201:
+          description: Department created
+        403:
+          description: Admin access required
+        409:
+          description: Department already exists
+
+  /departments/{id}:
+    get:
+      summary: Get department details
+      tags: [Departments]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Department details
+    put:
+      summary: Update department (Admin only)
+      tags: [Departments]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDepartmentRequest"
+      responses:
+        200:
+          description: Department updated
+    delete:
+      summary: Delete department (Admin only)
+      tags: [Departments]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Department deleted
+
+  /departments/{id}/stats:
+    get:
+      summary: Get department statistics
+      tags: [Departments]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Department stats
+
+  # --- INVENTORY ENDPOINTS ---
+  /inventory/items:
+    get:
+      summary: Get all inventory items
+      description: Retrieve a paginated list of inventory items with aggregated stock levels.
+      tags: [Inventory]
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+        - in: query
+          name: category
+          schema:
+            type: string
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: Search by name or SKU
+      responses:
+        200:
+          description: List of items retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/InventoryItem"
+                  meta:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      page:
+                        type: integer
+                      limit:
+                        type: integer
+                      totalPages:
+                        type: integer
+    post:
+      summary: Create inventory item
+      description: Create a new inventory item. Restricted to Management department (Admin, Manager, Store Keeper).
+      tags: [Inventory]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InventoryItem"
+      responses:
+        201:
+          description: Item created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: "#/components/schemas/InventoryItem"
+        403:
+          description: Access denied (Department/Role restriction)
+
+  /inventory/items/{id}:
+    get:
+      summary: Get inventory item details
+      tags: [Inventory]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Item details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: "#/components/schemas/InventoryItem"
+    patch:
+      summary: Update inventory item
+      description: Update item details. Restricted to Management department.
+      tags: [Inventory]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InventoryItem"
+      responses:
+        200:
+          description: Item updated successfully
+    delete:
+      summary: Delete inventory item
+      description: Delete an item. Restricted to Admin/Manager.
+      tags: [Inventory]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Item deleted successfully
+
+  /inventory/items/{itemId}/stock:
+    post:
+      summary: Add stock (Receive items)
+      description: Add a new stock batch to an item. Restricted to Management department.
+      tags: [Inventory]
+      parameters:
+        - in: path
+          name: itemId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StockEntry"
+      responses:
+        201:
+          description: Stock added successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    $ref: "#/components/schemas/StockEntry"
+
+  /inventory/items/{itemId}/allocate:
+    post:
+      summary: Allocate stock (Use items)
+      description: Reduce stock quantity using FIFO method. Restricted to Management department.
+      tags: [Inventory]
+      parameters:
+        - in: path
+          name: itemId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AllocateRequest"
+      responses:
+        200:
+          description: Stock allocated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Stock allocated successfully
+
+  /inventory/items/{itemId}/history:
+    get:
+      summary: Get stock history
+      description: Get history of stock entries for an item.
+      tags: [Inventory]
+      parameters:
+        - in: path
+          name: itemId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Stock history retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/StockEntry"
+  /reservations:
+    get:
+      summary: Get all reservations (Reception/Management)
+      tags: [Reservations]
+      parameters:
+        - in: query
+          name: checkInDate
+          schema:
+            type: string
+            format: date
+      responses:
+        200:
+          description: List of reservations
+    post:
+      summary: Create reservation (Reception)
+      tags: [Reservations]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Reservation"
+      responses:
+        201:
+          description: Reservation created
+  /reservations/{id}/check-in:
+    post:
+      summary: Check-in guest (Reception)
+      tags: [Reservations]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Guest checked in
+  /reservations/{id}/check-out:
+    post:
+      summary: Check-out guest (Reception)
+      tags: [Reservations]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Guest checked out
+
+  # --- RESTAURANT ENDPOINTS ---
+  /restaurant/menu:
+    get:
+      summary: Get menu items
+      description: Retrieve all available menu items.
+      tags: [Restaurant]
+      responses:
+        200:
+          description: List of menu items
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/MenuItem"
+
+  /restaurant/orders:
+    get:
+      summary: Get restaurant orders
+      description: Get a list of restaurant orders. Restricted to Restaurant Department.
+      tags: [Restaurant]
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+        - in: query
+          name: limit
+          schema:
+            type: integer
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [pending, preparing, ready, served, completed, cancelled]
+      responses:
+        200:
+          description: List of orders
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  orders:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/RestaurantOrder"
+                  meta:
+                    type: object
+    post:
+      summary: Create restaurant order
+      description: Create a new order (Dine-in, Room Service, etc.). Restricted to Restaurant Department.
+      tags: [Restaurant]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOrderRequest"
+      responses:
+        201:
+          description: Order created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: "#/components/schemas/RestaurantOrder"
+
+  /restaurant/orders/{id}:
+    get:
+      summary: Get order details
+      tags: [Restaurant]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Order details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: "#/components/schemas/RestaurantOrder"
+
+  /restaurant/orders/{id}/status:
+    patch:
+      summary: Update order status
+      description: Update the status of an order (e.g. pending -> preparing). Restricted to Restaurant Department.
+      tags: [Restaurant]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  enum:
+                    [pending, preparing, ready, served, completed, cancelled]
+      responses:
+        200:
+          description: Status updated
+
+  /restaurant/orders/{id}/payment:
+    post:
+      summary: Complete order payment
+      description: Mark an order as paid. Restricted to Restaurant Department.
+      tags: [Restaurant]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - paymentMethod
+              properties:
+                paymentMethod:
+                  type: string
+                  enum: [cash, card, room_charge, mobile_money]
+      responses:
+        200:
+          description: Payment completed
+  /bar/orders:
+    get:
+      summary: Get bar orders
+      tags: [Bar]
+      responses:
+        200:
+          description: List of orders
+    post:
+      summary: Create bar order (Restaurant staff)
+      tags: [Bar]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                items:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      barItemId:
+                        type: string
+                      quantity:
+                        type: integer
+      responses:
+        201:
+          description: Order created
+
+  # --- UPLOAD ENDPOINTS ---
+  /uploads/menu/{menuItemId}:
+    post:
+      summary: Upload menu item image
+      description: Upload an image for a specific menu item. Updates the productImage field. Restricted to Restaurant Manager/Admin.
+      tags: [Uploads]
+      parameters:
+        - in: path
+          name: menuItemId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  format: binary
+      responses:
+        200:
+          description: Image uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      url:
+                        type: string
+                        example: "https://res.cloudinary.com/.../image.jpg"
+                      publicId:
+                        type: string
+
+  /uploads/bar/{barItemId}:
+    post:
+      summary: Upload bar item image
+      description: Upload an image for a specific bar item. Updates the productImage field. Restricted to Bar Manager/Admin.
+      tags: [Uploads]
+      parameters:
+        - in: path
+          name: barItemId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  format: binary
+      responses:
+        200:
+          description: Image uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      url:
+                        type: string
+
+  # --- USER MANAGEMENT ENDPOINTS ---
+  /users:
+    get:
+      summary: Get all users (Admin only)
+      tags: [Users]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: List of users retrieved successfully
+
+  /users/{id}:
+    get:
+      summary: Get user details (Admin only)
+      tags: [Users]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: User details retrieved
+    patch:
+      summary: Update user (Admin only)
+      tags: [Users]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/User"
+      responses:
+        200:
+          description: User updated
+    delete:
+      summary: Delete user (Admin only)
+      tags: [Users]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: User deleted
+
+  /users/staff/all:
+    get:
+      summary: Get all staff members (Admin only)
+      tags: [Users]
+      responses:
+        200:
+          description: List of all staff members
+
+  /reports/revenue:
+    get:
+      summary: Get revenue report (Admin/Manager)
+      tags: [Reports]
+      parameters:
+        - in: query
+          name: startDate
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: endDate
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Revenue data
