@@ -121,8 +121,25 @@ app.use('/api/', slowDown);
 // Apply activity logger to log all API calls
 app.use('/api/', activityLogger);
 
-// Serve React static files
-app.use(express.static(path.join(__dirname, 'frontend')));
+// Serve React static files with proper MIME types
+app.use(express.static(path.join(__dirname, 'frontend'), {
+  setHeaders: (res, filePath) => {
+    const ext = path.extname(filePath);
+    if (ext === '.css') {
+      res.setHeader('Content-Type', 'text/css');
+    } else if (ext === '.js') {
+      res.setHeader('Content-Type', 'application/javascript');
+    } else if (ext === '.json') {
+      res.setHeader('Content-Type', 'application/json');
+    } else if (ext === '.png') {
+      res.setHeader('Content-Type', 'image/png');
+    } else if (ext === '.jpg' || ext === '.jpeg') {
+      res.setHeader('Content-Type', 'image/jpeg');
+    } else if (ext === '.svg') {
+      res.setHeader('Content-Type', 'image/svg+xml');
+    }
+  }
+}));
 
 // API routes - serve React app for non-API routes
 app.get('/api', (req, res) => {

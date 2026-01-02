@@ -11,10 +11,10 @@ export const helmetConfig = helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "blob:"], // Allow blobs
+      scriptSrc: ["'self'", "blob:", "https://www.google-analytics.com"], // Allow Google Analytics
       styleSrc: ["'self'", "'unsafe-inline'"], // Allow inline styles
       imgSrc: ["'self'", "data:", "blob:"], // Allow data URIs and blobs
-      connectSrc: ["'self'"], // Connections only to the same origin
+      connectSrc: ["'self'", "https://www.google-analytics.com", "https://overbridgenet.com"], // Allow external connections
       fontSrc: ["'self'"],
       objectSrc: ["'none'"],
       frameAncestors: ["'none'"],
@@ -29,7 +29,7 @@ export const helmetConfig = helmet({
   frameguard: {
     action: 'deny'
   },
-  noSniff: false, // Disable to allow proper MIME type detection for static files
+  noSniff: true, // Enable proper MIME type detection
   xssFilter: true,
   referrerPolicy: {
     policy: 'same-origin'
