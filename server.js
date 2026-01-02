@@ -19,20 +19,10 @@ const __dirname = path.dirname(__filename);
 
 const debug = Debug('backend:server');
 
-// Import security middleware
-import {
-  helmetConfig,
-  corsConfig,
-  sanitizeData,
-  preventXSS,
-  preventHPP,
-  securityHeaders,
-  requirePrivateNetwork
-} from './middleware/security.js';
+// Security middleware removed
 import { activityLogger } from './middleware/activityLogger.js';
 
-// Import rate limiters
-import { apiLimiter, slowDown } from './middleware/rateLimiter.js';
+// Rate limiters removed
 
 // Import routes
 import authRoutes from './routes/authRoutes.js';
@@ -50,8 +40,7 @@ import guestRoutes from './routes/guestRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
 
-// Import Socket.io service
-import socketService from './services/socketService.js';
+// Socket.io service removed
 
 // Import middleware
 import { errorHandler, notFound } from './middleware/errorHandler.js';
@@ -59,13 +48,9 @@ import { errorHandler, notFound } from './middleware/errorHandler.js';
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Trust proxy - important for rate limiting behind reverse proxy
-app.set('trust proxy', 1);
+// Trust proxy removed
 
-// Security middleware
-app.use(helmetConfig);
-app.use(corsConfig);
-app.use(securityHeaders);
+// Security middleware removed
 
 // Compression middleware
 app.use(compression({
@@ -83,63 +68,40 @@ app.use(compression({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Data sanitization
-app.use(sanitizeData);
-app.use(preventXSS);
-app.use(preventHPP);
+// Data sanitization removed
 app.use(activityLogger);
 
 // HTTP request logging with Morgan and Winston
 // Morgan logs all API requests with timestamp, method, URL, status, and response time
 const morganFormat = ':method :url | Status: :status | Duration: :response-time ms | IP: :remote-addr';
 
-// Winston stream for Morgan - logs to both console and files
-const winstonStream = {
-  write: (message) => {
-    if (message && message.trim()) {
-      // Log to console
-      console.log(`🔍 ${message.trim()}`);
-      // Log to Winston HTTP logger for file persistence
-      logger.http(message.trim());
+  const winstonStream = {
+    write: (message) => {
+      if (message && message.trim()) {
+        // Log to console
+        console.log(`🔍 ${message.trim()}`);
+        // Log to Winston HTTP logger for file persistence
+        logger.http(message.trim());
+      }
     }
-  }
-};
+  };
 
 // Apply Morgan middleware with custom stream
 app.use(morgan(morganFormat, { 
   stream: winstonStream,
-  skip: (req, res) => {
+  skip: (req) => {
     // Don't log health checks
     return req.path === '/health';
   }
 }));
 
-// Apply rate limiting
-app.use('/api/', apiLimiter);
-app.use('/api/', slowDown);
+// Rate limiting removed
 
 // Apply activity logger to log all API calls
 app.use('/api/', activityLogger);
 
-// Serve React static files with proper MIME types
-app.use(express.static(path.join(__dirname, 'frontend'), {
-  setHeaders: (res, filePath) => {
-    const ext = path.extname(filePath);
-    if (ext === '.css') {
-      res.setHeader('Content-Type', 'text/css');
-    } else if (ext === '.js') {
-      res.setHeader('Content-Type', 'application/javascript');
-    } else if (ext === '.json') {
-      res.setHeader('Content-Type', 'application/json');
-    } else if (ext === '.png') {
-      res.setHeader('Content-Type', 'image/png');
-    } else if (ext === '.jpg' || ext === '.jpeg') {
-      res.setHeader('Content-Type', 'image/jpeg');
-    } else if (ext === '.svg') {
-      res.setHeader('Content-Type', 'image/svg+xml');
-    }
-  }
-}));
+// Static files with basic configuration
+app.use(express.static(path.join(__dirname, 'frontend')));
 
 // API routes - serve React app for non-API routes
 app.get('/api', (req, res) => {
@@ -149,9 +111,9 @@ app.get('/api', (req, res) => {
     status: 'running',
     features: {
       caching: redisClient.isConnected ? 'enabled' : 'disabled',
-      security: 'enabled',
+      security: 'disabled',
       logging: 'enabled',
-      rateLimiting: 'enabled',
+      rateLimiting: 'disabled',
       compression: 'enabled'
     },
     endpoints: {
@@ -355,17 +317,13 @@ const startServer = async () => {
       logger.info(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
       logger.info(`🏨 EliteHub Hotel Management System v2.0`);
       
-      // Initialize Socket.io
-      import('./config/socket.js').then(({ initSocket }) => {
-        initSocket(server);
-        logger.info(`🔌 Socket.io: Enabled`);
-      });
+      // Socket.io disabled
 
       logger.info(`📡 API Base URL: http://localhost:${PORT}/api`);
-      logger.info(`🔒 Security: Enabled`);
+      logger.info(`🔒 Security: Disabled`);
       logger.info(`📊 Logging: Enabled`);
       logger.info(`⚡ Caching: ${redisClient.isConnected ? 'Enabled' : 'Disabled'}`);
-      logger.info(`🛡️  Rate Limiting: Enabled`);
+      logger.info(`🛡️  Rate Limiting: Disabled`);
       logger.info(`🗜️  Compression: Enabled`);
       logger.info('='.repeat(50));
     });
