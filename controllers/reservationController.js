@@ -42,7 +42,7 @@ class ReservationController {
         limit: parseInt(req.query.limit) || 10
       };
 
-      const result = await reservationService.getAllReservations(filters, pagination);
+      const result = await reservationService.getAllReservations(filters, pagination, req.user);
       
       res.status(200).json({
         success: true,
@@ -62,7 +62,7 @@ class ReservationController {
    */
   async getReservationById(req, res) {
     try {
-      const reservation = await reservationService.getReservationById(req.params.id);
+      const reservation = await reservationService.getReservationById(req.params.id, req.user);
       res.status(200).json({
         success: true,
         data: reservation

@@ -2,6 +2,24 @@ import db from '../models/index.js';
 
 const { Reservation, Guest, Room, RoomType, Staff } = db;
 
+// Helper function to filter staff data based on user role
+const filterStaffData = (staff, user) => {
+  if (!staff || !user) return staff;
+  
+  // Always exclude super admins unless the user is a super admin
+  if (staff.role === 'super_admin' && user.role !== 'super_admin') {
+    return null;
+  }
+  
+  // If user is admin, they can only see themselves and non-admin staff
+  if (user.role === 'admin') {
+    return staff.id === user.id || !['super_admin', 'admin'].includes(staff.role) ? staff : null;
+  }
+  
+  // For other roles, exclude admins and super admins
+  return !['super_admin', 'admin'].includes(staff.role) ? staff : null;
+};
+
 class ReservationService {
   /**
    * Create a new reservation
@@ -111,7 +129,7 @@ class ReservationService {
   /**
    * Get reservation by ID
    */
-  async getReservationById(id) {
+  async getReservationById(id, user = null) {
     const reservation = await Reservation.findByPk(id, {
       include: [
         { model: Guest, as: 'guest' },
@@ -124,13 +142,24 @@ class ReservationService {
       throw new Error('Reservation not found');
     }
 
+    // Apply staff filtering if user is provided
+    if (user && reservation.staff) {
+      const filteredStaff = filterStaffData(reservation.staff, user);
+      if (!filteredStaff) {
+        // If staff is filtered out, remove the staff association
+        reservation.staff = null;
+      } else {
+        reservation.staff = filteredStaff;
+      }
+    }
+
     return reservation;
   }
 
   /**
    * Get all reservations with filters
    */
-  async getAllReservations(filters = {}, pagination = {}) {
+  async getAllReservations(filters = {}, pagination = {}, user = null) {
     const { status, startDate, endDate, guestId, roomId } = filters;
     const { page = 1, limit = 10 } = pagination;
     const offset = (page - 1) * limit;
@@ -159,6 +188,20 @@ class ReservationService {
       order: [['checkInDate', 'DESC']],
       distinct: true
     });
+
+    // Apply staff filtering if user is provided
+    if (user) {
+      rows.forEach(reservation => {
+        if (reservation.staff) {
+          const filteredStaff = filterStaffData(reservation.staff, user);
+          if (!filteredStaff) {
+            reservation.staff = null;
+          } else {
+            reservation.staff = filteredStaff;
+          }
+        }
+      });
+    }
 
     return {
       reservations: rows,

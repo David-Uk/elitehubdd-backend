@@ -82,7 +82,7 @@ class RestaurantController {
         limit: parseInt(req.query.limit) || 10
       };
 
-      const result = await restaurantService.getAllOrders(filters, pagination);
+      const result = await restaurantService.getAllOrders(filters, pagination, req.user);
       
       res.status(200).json({
         success: true,
@@ -102,7 +102,7 @@ class RestaurantController {
    */
   async getOrderById(req, res) {
     try {
-      const order = await restaurantService.getOrderById(req.params.id);
+      const order = await restaurantService.getOrderById(req.params.id, req.user);
       res.status(200).json({
         success: true,
         data: order

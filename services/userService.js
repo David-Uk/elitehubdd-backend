@@ -50,9 +50,27 @@ class UserService {
   /**
    * Get all staff members
    */
-  async getAllStaff(filters = {}) {
+  async getAllStaff(filters = {}, user = null) {
+    let whereClause = { ...filters };
+    
+    // Apply role-based filtering if user is provided
+    if (user) {
+      if (user.role !== 'super_admin') {
+        // Always exclude super admins unless the user is a super admin
+        whereClause.role = { [db.Sequelize.Op.ne]: 'super_admin' };
+      }
+      
+      // If user is admin, they can only see themselves and non-admin staff
+      if (user.role === 'admin') {
+        whereClause[db.Sequelize.Op.or] = [
+          { id: user.id }, // Can see themselves
+          { role: { [db.Sequelize.Op.notIn]: ['super_admin', 'admin'] } } // Can see non-admin staff
+        ];
+      }
+    }
+    
     return await Staff.findAll({
-      where: filters,
+      where: whereClause,
       include: [
         {
           model: db.Department,

@@ -48,6 +48,7 @@ import inventoryRoutes from './routes/inventoryRoutes.js';
 import departmentRoutes from './routes/departmentRoutes.js';
 import guestRoutes from './routes/guestRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
+import dashboardRoutes from './routes/dashboardRoutes.js';
 
 // Import Socket.io service
 import socketService from './services/socketService.js';
@@ -120,7 +121,7 @@ app.use('/api/', slowDown);
 // Apply activity logger to log all API calls
 app.use('/api/', activityLogger);
 
-// Serve React static files from dist directory
+// Serve React static files
 app.use(express.static(path.join(__dirname, 'frontend')));
 
 // API routes - serve React app for non-API routes
@@ -150,6 +151,7 @@ app.get('/api', (req, res) => {
       users: '/api/users',
       guests: '/api/guests',
       notifications: '/api/notifications',
+      dashboard: '/api/dashboard',
       health: '/health',
       metrics: '/metrics'
     }
@@ -174,6 +176,7 @@ app.use('/api/departments', departmentRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/guests', guestRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // Swagger Documentation
 const swaggerDocument = YAML.load('./swagger.yaml');

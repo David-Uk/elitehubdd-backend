@@ -79,7 +79,7 @@ class UserController {
    */
   async getAllStaff(req, res) {
     try {
-      const staff = await userService.getAllStaff(req.query);
+      const staff = await userService.getAllStaff(req.query, req.user);
       res.status(200).json({
         success: true,
         data: staff

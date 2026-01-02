@@ -108,8 +108,43 @@ class NotificationService {
       ]
     });
 
+    // Filter out sensitive metadata for end users
+    const filteredNotifications = rows.map(notification => {
+      const {
+        id,
+        action,
+        message,
+        type,
+        read,
+        createdAt,
+        updatedAt,
+        staff,
+        user
+      } = notification.toJSON();
+
+      return {
+        id,
+        action,
+        message,
+        type,
+        read,
+        createdAt,
+        updatedAt,
+        staff: staff ? {
+          id: staff.id,
+          firstName: staff.firstName,
+          lastName: staff.lastName,
+          role: staff.role
+        } : null,
+        user: user ? {
+          id: user.id,
+          username: user.username
+        } : null
+      };
+    });
+
     return {
-      notifications: rows,
+      notifications: filteredNotifications,
       meta: {
         total: count,
         page: parseInt(page),
@@ -220,13 +255,60 @@ class NotificationService {
     const route = req.route?.path || req.path;
     const success = res.statusCode < 400;
 
+    // Generate user-friendly action descriptions
     let action = '';
-    if (method === 'POST') action = 'created';
-    else if (method === 'PUT' || method === 'PATCH') action = 'updated';
-    else if (method === 'DELETE') action = 'deleted';
-    else action = 'accessed';
+    let resource = '';
+    
+    // Extract resource type from route
+    if (route.includes('/reservations')) {
+      resource = 'reservation';
+    } else if (route.includes('/inventory/items')) {
+      resource = 'inventory item';
+    } else if (route.includes('/notifications')) {
+      resource = 'notification';
+    } else if (route.includes('/auth')) {
+      resource = 'authentication';
+    } else if (route.includes('/menu-items')) {
+      resource = 'menu item';
+    } else if (route.includes('/orders')) {
+      resource = 'order';
+    } else if (route.includes('/batches')) {
+      resource = 'batch order';
+    } else if (route.includes('/staff')) {
+      resource = 'staff member';
+    } else if (route.includes('/reports')) {
+      resource = 'report';
+    } else {
+      resource = 'item';
+    }
 
-    return `${userName} ${action} ${route} ${success ? 'successfully' : 'with errors'}`;
+    if (method === 'POST') {
+      if (success) {
+        action = `successfully created a new ${resource}`;
+      } else {
+        action = `failed to create a new ${resource}`;
+      }
+    } else if (method === 'PUT' || method === 'PATCH') {
+      if (success) {
+        action = `successfully updated the ${resource}`;
+      } else {
+        action = `failed to update the ${resource}`;
+      }
+    } else if (method === 'DELETE') {
+      if (success) {
+        action = `successfully deleted the ${resource}`;
+      } else {
+        action = `failed to delete the ${resource}`;
+      }
+    } else {
+      if (success) {
+        action = `successfully accessed the ${resource}`;
+      } else {
+        action = `encountered an error while accessing the ${resource}`;
+      }
+    }
+
+    return `${userName} ${action}`;
   }
 
   /**

@@ -2,6 +2,24 @@ import db from '../models/index.js';
 
 const { RestaurantOrder, RestaurantOrderItem, MenuItem, Reservation, Staff, OrderBatch, BatchSource } = db;
 
+// Helper function to filter staff data based on user role
+const filterStaffData = (staff, user) => {
+  if (!staff || !user) return staff;
+  
+  // Always exclude super admins unless the user is a super admin
+  if (staff.role === 'super_admin' && user.role !== 'super_admin') {
+    return null;
+  }
+  
+  // If user is admin, they can only see themselves and non-admin staff
+  if (user.role === 'admin') {
+    return staff.id === user.id || !['super_admin', 'admin'].includes(staff.role) ? staff : null;
+  }
+  
+  // For other roles, exclude admins and super admins
+  return !['super_admin', 'admin'].includes(staff.role) ? staff : null;
+};
+
 class RestaurantService {
   /**
    * Generate unique batch ID
@@ -122,7 +140,7 @@ class RestaurantService {
   /**
    * Get order by ID
    */
-  async getOrderById(id) {
+  async getOrderById(id, user = null) {
     const order = await RestaurantOrder.findByPk(id, {
       include: [
         {
@@ -139,13 +157,24 @@ class RestaurantService {
       throw new Error('Order not found');
     }
 
+    // Apply staff filtering if user is provided
+    if (user && order.staff) {
+      const filteredStaff = filterStaffData(order.staff, user);
+      if (!filteredStaff) {
+        // If staff is filtered out, remove the staff association
+        order.staff = null;
+      } else {
+        order.staff = filteredStaff;
+      }
+    }
+
     return order;
   }
 
   /**
    * Get all orders with filters
    */
-  async getAllOrders(filters = {}, pagination = {}) {
+  async getAllOrders(filters = {}, pagination = {}, user = null) {
     const { status, orderType, startDate, endDate } = filters;
     const { page = 1, limit = 10 } = pagination;
     const offset = (page - 1) * limit;
@@ -178,15 +207,21 @@ class RestaurantService {
       distinct: true
     });
 
-    return {
-      orders: rows,
-      meta: {
-        total: count,
-        page: parseInt(page),
-        limit: parseInt(limit),
-        totalPages: Math.ceil(count / limit)
-      }
-    };
+    // Apply staff filtering if user is provided
+    if (user) {
+      rows.forEach(order => {
+        if (order.staff) {
+          const filteredStaff = filterStaffData(order.staff, user);
+          if (!filteredStaff) {
+            order.staff = null;
+          } else {
+            order.staff = filteredStaff;
+          }
+        }
+      });
+    }
+
+    return { count, rows };
   }
 
   /**

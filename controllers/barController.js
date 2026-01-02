@@ -41,7 +41,7 @@ class BarController {
         limit: parseInt(req.query.limit) || 10
       };
 
-      const result = await barService.getAllOrders(filters, pagination);
+      const result = await barService.getAllOrders(filters, pagination, req.user);
       
       res.status(200).json({
         success: true,
@@ -61,7 +61,7 @@ class BarController {
    */
   async getOrderById(req, res) {
     try {
-      const order = await barService.getOrderById(req.params.id);
+      const order = await barService.getOrderById(req.params.id, req.user);
       res.status(200).json({
         success: true,
         data: order

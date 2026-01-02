@@ -11,9 +11,14 @@ export const helmetConfig = helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", 'data:', 'https:'],
+      scriptSrc: ["'self'", "blob:"], // Allow blobs
+      styleSrc: ["'self'", "'unsafe-inline'"], // Allow inline styles
+      imgSrc: ["'self'", "data:", "blob:"], // Allow data URIs and blobs
+      connectSrc: ["'self'"], // Connections only to the same origin
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      frameAncestors: ["'none'"],
+      upgradeInsecureRequests: [],
     },
   },
   hsts: {
@@ -24,7 +29,7 @@ export const helmetConfig = helmet({
   frameguard: {
     action: 'deny'
   },
-  noSniff: true,
+  noSniff: false, // Disable to allow proper MIME type detection for static files
   xssFilter: true,
   referrerPolicy: {
     policy: 'same-origin'
@@ -38,7 +43,13 @@ export const corsConfig = cors({
   origin: (origin, callback) => {
     const allowedOrigins = process.env.ALLOWED_ORIGINS 
       ? process.env.ALLOWED_ORIGINS.split(',')
-      : ['http://localhost:3000', 'http://localhost:5173'];
+      : [
+          'http://localhost:3000', 
+          'http://localhost:5173',
+          'https://elitehubdd-backend.onrender.com',
+          'https://elitehubdd-backend.onrender.com/',
+          'https://elitehubdd-backend.onrender.com/assets'
+        ];
     
     // Allow requests with no origin (mobile apps, Postman, etc.)
     if (!origin) return callback(null, true);
