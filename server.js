@@ -121,7 +121,7 @@ app.use('/api/', slowDown);
 app.use('/api/', activityLogger);
 
 // Serve React static files from dist directory
-app.use(express.static(path.join(__dirname, 'dist')));
+app.use(express.static(path.join(__dirname, 'frontend')));
 
 // API routes - serve React app for non-API routes
 app.get('/api', (req, res) => {
@@ -250,7 +250,7 @@ app.use((req, res, next) => {
     return next();
   }
   // Serve React app for all other routes
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+  res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
 });
 
 // 404 handler

@@ -1,0 +1,10 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+
+# Disallow all admin pages
+Disallow: /admin/
+Disallow: /api/
+
+# Sitemap
+Sitemap: https://elitehubbydd.com/sitemap.xml

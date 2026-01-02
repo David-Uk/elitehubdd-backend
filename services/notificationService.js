@@ -201,7 +201,21 @@ class NotificationService {
    */
   getMessageFromRequest(req, res) {
     const user = req.user;
-    const userName = user ? `${user.firstName} ${user.lastName}` : 'Unknown User';
+    
+    // Handle different user object structures
+    let userName = 'Unknown User';
+    if (user) {
+      if (user.firstName && user.lastName) {
+        userName = `${user.firstName} ${user.lastName}`;
+      } else if (user.username) {
+        userName = user.username;
+      } else if (user.email) {
+        userName = user.email;
+      } else if (user.name) {
+        userName = user.name;
+      }
+    }
+    
     const method = req.method;
     const route = req.route?.path || req.path;
     const success = res.statusCode < 400;
