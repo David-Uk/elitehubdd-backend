@@ -160,3 +160,13 @@ export const isAdmin = authorize('admin');
  * Middleware to check if user is admin or manager
  */
 export const isAdminOrManager = authorize('admin', 'manager');
+
+/**
+ * Alias for authenticate function for consistency
+ */
+export const authenticateToken = authenticate;
+
+/**
+ * Alias for authorize function for consistency
+ */
+export const requireRole = authorize;

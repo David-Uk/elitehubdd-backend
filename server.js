@@ -42,6 +42,7 @@ import departmentRoutes from './routes/departmentRoutes.js';
 import guestRoutes from './routes/guestRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
+import dataClearRoutes from './routes/dataClearRoutes.js';
 
 // Socket.io service removed
 
@@ -162,6 +163,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/guests', guestRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/data-clear', dataClearRoutes);
 
 // Swagger Documentation
 const swaggerDocument = YAML.load('./swagger.yaml');
