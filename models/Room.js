@@ -39,10 +39,6 @@ export default (sequelize, DataTypes) => {
       allowNull: false,
       field: 'room_type_id'
     },
-    floor: {
-      type: DataTypes.INTEGER,
-      allowNull: false
-    },
     status: {
       type: DataTypes.ENUM(
         'available',

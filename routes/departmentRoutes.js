@@ -7,7 +7,8 @@ import {
   deleteDepartment,
   getDepartmentStats
 } from '../controllers/departmentController.js';
-import { authenticate, isAdmin } from '../middleware/auth.js';
+import { authenticate, authorize } from '../middleware/auth.js';
+import { validateDepartment, validateUUID } from '../middleware/validator.js';
 
 const router = express.Router();
 
@@ -23,34 +24,46 @@ router.get('/', authenticate, getAllDepartments);
  * @desc    Get department by ID
  * @access  Private (Authenticated users)
  */
-router.get('/:id', authenticate, getDepartmentById);
+router.get('/:id', authenticate, validateUUID, getDepartmentById);
 
 /**
  * @route   GET /api/departments/:id/stats
  * @desc    Get department statistics
  * @access  Private (Authenticated users)
  */
-router.get('/:id/stats', authenticate, getDepartmentStats);
+router.get('/:id/stats', authenticate, validateUUID, getDepartmentStats);
 
 /**
  * @route   POST /api/departments
  * @desc    Create new department
  * @access  Private (Admin only)
  */
-router.post('/', authenticate, isAdmin, createDepartment);
+/**
+ * @route   POST /api/departments
+ * @desc    Create new department
+ * @access  Private (Restricted)
+ */
+router.post('/', authenticate, authorize('super_admin', 'admin'), validateDepartment, createDepartment);
 
 /**
  * @route   PUT /api/departments/:id
  * @desc    Update department
- * @access  Private (Admin only)
+ * @access  Private (Restricted)
  */
-router.put('/:id', authenticate, isAdmin, updateDepartment);
+router.put('/:id', authenticate, authorize('super_admin', 'admin'), validateUUID, validateDepartment, updateDepartment);
 
 /**
  * @route   DELETE /api/departments/:id
  * @desc    Delete department (soft delete)
- * @access  Private (Admin only)
+ * @access  Private (Restricted)
  */
-router.delete('/:id', authenticate, isAdmin, deleteDepartment);
+router.delete('/:id', authenticate, authorize('super_admin', 'admin'), validateUUID, deleteDepartment);
+
+/**
+ * @route   DELETE /api/departments/:id
+ * @desc    Delete department (soft delete) - duplicate route clean up
+ * @access  Private (Restricted)
+ */
+// router.delete('/:id', authenticate, authorize('super_admin', 'admin'), deleteDepartment); // Removing duplicate logic if present
 
 export default router;

@@ -177,12 +177,17 @@ module.exports = {
       },
       role: {
         type: DataTypes.ENUM(
+          'super_admin',
           'admin',
+          'accountant',
+          'supervisor',
           'manager',
           'receptionist',
           'housekeeping',
           'restaurant_staff',
           'bar_staff',
+          'waiter',
+          'kitchen_staff',
           'maintenance'
         ),
         defaultValue: 'receptionist',

@@ -63,8 +63,8 @@ export const authorize = (...roles) => {
       });
     }
 
-    // Admin always has access
-    if (req.user.role === 'admin') {
+    // Super Admin always has access (God Mode)
+    if (req.user.role === 'super_admin') {
       return next();
     }
 
@@ -92,8 +92,8 @@ export const authorizeDepartment = (...departments) => {
       });
     }
 
-    // Admins bypass department checks
-    if (req.user.role === 'admin') {
+    // Super Admin bypasses department checks
+    if (req.user.role === 'super_admin') {
       return next();
     }
 

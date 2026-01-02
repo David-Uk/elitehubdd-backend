@@ -1,54 +1,58 @@
 import express from 'express';
 import reportController from '../controllers/reportController.js';
-import { authenticate, isAdminOrManager } from '../middleware/auth.js';
+import { authenticate, authorize } from '../middleware/auth.js';
 import { cache } from '../middleware/cache.js';
-import { reportLimiter } from '../middleware/rateLimiter.js';
 import { validateDateRange } from '../middleware/validator.js';
 
 const router = express.Router();
 
-// All routes require authentication and admin/manager role
+// All routes require authentication and privileges
 router.use(authenticate);
-router.use(isAdminOrManager);
-router.use(reportLimiter);
+// router.use(authorize(...)); // Granular per route
 
-// Revenue report with caching (5 minutes)
+// Revenue (Admins, Accountant, Supervisor only)
 router.get('/revenue', 
+  authorize('super_admin', 'admin', 'accountant', 'supervisor'),
   validateDateRange,
   cache(300),
   reportController.getRevenueReport
 );
 
-// Occupancy report with caching (5 minutes)
+// Occupancy (Receptionist allowed)
 router.get('/occupancy', 
+  authorize('super_admin', 'admin', 'accountant', 'supervisor', 'receptionist'),
   validateDateRange,
   cache(300),
   reportController.getOccupancyReport
 );
 
-// Reservation statistics with caching (5 minutes)
+// Reservation stats (Receptionist allowed)
 router.get('/reservations', 
+  authorize('super_admin', 'admin', 'accountant', 'supervisor', 'receptionist'),
   validateDateRange,
   cache(300),
   reportController.getReservationStats
 );
 
-// Feedback summary with caching (10 minutes)
+// Feedback (Admins, Accountant, Supervisor) - maybe Receptionist too? Staying safe.
 router.get('/feedback', 
+  authorize('super_admin', 'admin', 'accountant', 'supervisor'),
   validateDateRange,
   cache(600),
   reportController.getFeedbackSummary
 );
 
-// Top performing rooms with caching (10 minutes)
+// Top Rooms (Receptionist allowed)
 router.get('/top-rooms', 
+  authorize('super_admin', 'admin', 'accountant', 'supervisor', 'receptionist'),
   validateDateRange,
   cache(600),
   reportController.getTopPerformingRooms
 );
 
-// Guest statistics with caching (10 minutes)
+// Guest stats (Receptionist allowed)
 router.get('/guests', 
+  authorize('super_admin', 'admin', 'accountant', 'supervisor', 'receptionist'),
   validateDateRange,
   cache(600),
   reportController.getGuestStats

@@ -131,6 +131,43 @@ class ReservationController {
       });
     }
   }
+
+  /**
+   * Check room availability
+   */
+  async checkRoomAvailability(req, res) {
+    try {
+      const { checkInDate, checkOutDate } = req.query;
+
+      if (!checkInDate || !checkOutDate) {
+        return res.status(400).json({
+          success: false,
+          message: 'checkInDate and checkOutDate are required'
+        });
+      }
+
+      const availableRooms = await reservationService.checkRoomAvailability(
+        checkInDate,
+        checkOutDate
+      );
+
+      res.status(200).json({
+        success: true,
+        message: 'Available rooms retrieved successfully',
+        data: {
+          checkInDate,
+          checkOutDate,
+          availableRooms,
+          totalAvailable: availableRooms.length
+        }
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
 }
 
 export default new ReservationController();

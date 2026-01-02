@@ -115,6 +115,25 @@ class BarController {
   }
 
   /**
+   * Create new bar item
+   */
+  async createBarItem(req, res) {
+    try {
+      const barItem = await barService.createBarItem(req.body);
+      res.status(201).json({
+        success: true,
+        message: 'Bar item created successfully',
+        data: barItem
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  /**
    * Get bar items
    */
   async getBarItems(req, res) {

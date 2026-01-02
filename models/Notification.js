@@ -60,6 +60,13 @@ export default (sequelize, DataTypes) => {
       allowNull: true,
       comment: 'Extra data related to the action (e.g., request body, changed fields)'
     },
+    targetRoles: {
+      type: DataTypes.JSONB,
+      defaultValue: [],
+      allowNull: false,
+      field: 'target_roles',
+      comment: 'List of roles that can view this notification'
+    },
     ipAddress: {
       type: DataTypes.STRING,
       allowNull: true,

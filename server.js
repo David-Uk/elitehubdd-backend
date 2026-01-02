@@ -3,6 +3,7 @@ dotenv.config();
 
 import express from 'express';
 import compression from 'compression';
+import morgan from 'morgan';
 import logger from './config/logger.js';
 import redisClient from './config/redis.js';
 import connectDB from './db.js';
@@ -22,7 +23,7 @@ import {
   securityHeaders,
   requirePrivateNetwork
 } from './middleware/security.js';
-import activityLogger from './middleware/activityLogger.js';
+import { activityLogger } from './middleware/activityLogger.js';
 
 // Import rate limiters
 import { apiLimiter, slowDown } from './middleware/rateLimiter.js';
@@ -30,6 +31,8 @@ import { apiLimiter, slowDown } from './middleware/rateLimiter.js';
 // Import routes
 import authRoutes from './routes/authRoutes.js';
 import reservationRoutes from './routes/reservationRoutes.js';
+import roomRoutes from './routes/roomRoutes.js';
+import roomTypeRoutes from './routes/roomTypeRoutes.js';
 import restaurantRoutes from './routes/restaurantRoutes.js';
 import barRoutes from './routes/barRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
@@ -37,6 +40,10 @@ import userRoutes from './routes/userRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 import inventoryRoutes from './routes/inventoryRoutes.js';
 import departmentRoutes from './routes/departmentRoutes.js';
+import guestRoutes from './routes/guestRoutes.js';
+
+// Import Socket.io service
+import socketService from './services/socketService.js';
 
 // Import middleware
 import { errorHandler, notFound } from './middleware/errorHandler.js';
@@ -74,17 +81,30 @@ app.use(preventXSS);
 app.use(preventHPP);
 app.use(activityLogger);
 
-// HTTP request logging with Winston
-app.use((req, res, next) => {
-  const start = Date.now();
-  
-  res.on('finish', () => {
-    const duration = Date.now() - start;
-    logger.http(`${req.method} ${req.originalUrl} ${res.statusCode} ${duration}ms`);
-  });
-  
-  next();
-});
+// HTTP request logging with Morgan and Winston
+// Morgan logs all API requests with timestamp, method, URL, status, and response time
+const morganFormat = ':method :url | Status: :status | Duration: :response-time ms | IP: :remote-addr';
+
+// Winston stream for Morgan - logs to both console and files
+const winstonStream = {
+  write: (message) => {
+    if (message && message.trim()) {
+      // Log to console
+      console.log(`🔍 ${message.trim()}`);
+      // Log to Winston HTTP logger for file persistence
+      logger.http(message.trim());
+    }
+  }
+};
+
+// Apply Morgan middleware with custom stream
+app.use(morgan(morganFormat, { 
+  stream: winstonStream,
+  skip: (req, res) => {
+    // Don't log health checks
+    return req.path === '/health';
+  }
+}));
 
 // Apply rate limiting
 app.use('/api/', apiLimiter);
@@ -104,14 +124,18 @@ app.get('/', (req, res) => {
       compression: 'enabled'
     },
     endpoints: {
-      auth: '/api/auth',
       reservations: '/api/reservations',
+      rooms: '/api/rooms',
+      roomTypes: '/api/room-types',
+      reports: '/api/reports',
+      auth: '/api/auth',
       restaurant: '/api/restaurant',
       bar: '/api/bar',
-      reports: '/api/reports',
       uploads: '/api/uploads',
       inventory: '/api/inventory',
       departments: '/api/departments',
+      users: '/api/users',
+      guests: '/api/guests',
       health: '/health',
       metrics: '/metrics'
     }
@@ -122,16 +146,19 @@ app.get('/', (req, res) => {
 // API Routes
 // Public/Open Network Routes
 app.use('/api/reservations', reservationRoutes);
+app.use('/api/rooms', roomRoutes);
+app.use('/api/room-types', roomTypeRoutes);
 app.use('/api/reports', reportRoutes);
 
 // Private Network restricted Routes
-app.use('/api/auth', requirePrivateNetwork, authRoutes);
-app.use('/api/restaurant', requirePrivateNetwork, restaurantRoutes);
-app.use('/api/bar', requirePrivateNetwork, barRoutes);
-app.use('/api/uploads', requirePrivateNetwork, uploadRoutes);
-app.use('/api/inventory', requirePrivateNetwork, inventoryRoutes);
-app.use('/api/departments', requirePrivateNetwork, departmentRoutes);
-app.use('/api/users', requirePrivateNetwork, userRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/restaurant', restaurantRoutes);
+app.use('/api/bar', barRoutes);
+app.use('/api/uploads', uploadRoutes);
+app.use('/api/inventory', inventoryRoutes);
+app.use('/api/departments', departmentRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/guests', guestRoutes);
 
 // Swagger Documentation
 const swaggerDocument = YAML.load('./swagger.yaml');
@@ -276,11 +303,19 @@ const startServer = async () => {
     }
     
     // Start listening
+    // Start listening
     server = app.listen(PORT, () => {
       logger.info('='.repeat(50));
       logger.info(`🚀 Server is running on port ${PORT}`);
       logger.info(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
       logger.info(`🏨 EliteHub Hotel Management System v2.0`);
+      
+      // Initialize Socket.io
+      import('./config/socket.js').then(({ initSocket }) => {
+        initSocket(server);
+        logger.info(`🔌 Socket.io: Enabled`);
+      });
+
       logger.info(`📡 API Base URL: http://localhost:${PORT}/api`);
       logger.info(`🔒 Security: Enabled`);
       logger.info(`📊 Logging: Enabled`);
@@ -303,3 +338,8 @@ const startServer = async () => {
 startServer();
 
 export default app;
+
+
+
+
+

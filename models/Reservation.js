@@ -84,14 +84,6 @@ export default (sequelize, DataTypes) => {
       allowNull: false,
       field: 'check_out_date'
     },
-    actualCheckIn: {
-      type: DataTypes.DATE,
-      field: 'actual_check_in'
-    },
-    actualCheckOut: {
-      type: DataTypes.DATE,
-      field: 'actual_check_out'
-    },
     numberOfGuests: {
       type: DataTypes.INTEGER,
       allowNull: false,
@@ -102,6 +94,7 @@ export default (sequelize, DataTypes) => {
       type: DataTypes.ENUM(
         'pending',
         'confirmed',
+        'reserved',
         'checked_in',
         'checked_out',
         'cancelled',
@@ -119,15 +112,6 @@ export default (sequelize, DataTypes) => {
       type: DataTypes.DECIMAL(10, 2),
       defaultValue: 0,
       field: 'paid_amount'
-    },
-    paymentStatus: {
-      type: DataTypes.ENUM('pending', 'partial', 'paid', 'refunded'),
-      defaultValue: 'pending',
-      field: 'payment_status'
-    },
-    paymentMethod: {
-      type: DataTypes.ENUM('cash', 'card', 'bank_transfer', 'mobile_money'),
-      field: 'payment_method'
     },
     specialRequests: {
       type: DataTypes.TEXT,
@@ -156,9 +140,6 @@ export default (sequelize, DataTypes) => {
       },
       {
         fields: ['status']
-      },
-      {
-        fields: ['payment_status']
       },
       {
         fields: ['created_at']

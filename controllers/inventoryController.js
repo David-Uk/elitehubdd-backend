@@ -19,6 +19,55 @@ class InventoryController {
     }
   }
 
+  async createBatchItems(req, res) {
+    try {
+      const startTime = Date.now();
+      
+      // Pass user information for real-time monitoring
+      const options = {
+        userId: req.user?.id || 'anonymous',
+        sessionId: req.body.sessionId || null
+      };
+      
+      const result = await inventoryService.createBatchItems(req.body.items, options);
+      
+      // Add additional performance metrics
+      result.performance = {
+        totalProcessingTime: Date.now() - startTime,
+        averageTimePerItem: Math.round((Date.now() - startTime) / req.body.items.length),
+        throughput: Math.round((result.summary.created / (Date.now() - startTime)) * 1000), // items per second
+        batchSize: req.body.items.length
+      };
+
+      // Set appropriate status code based on results
+      const statusCode = result.summary.created > 0 ? 201 : 400;
+      
+      res.status(statusCode).json({
+        success: result.summary.created > 0,
+        message: result.summary.created > 0 
+          ? `Batch inventory items processed successfully (${result.summary.created}/${result.summary.total} created)`
+          : 'No items were created. Check failed items for details.',
+        data: result,
+        meta: {
+          timestamp: new Date().toISOString(),
+          requestId: req.id || 'unknown',
+          processingTime: result.performance.totalProcessingTime,
+          sessionId: result.sessionId,
+          socketUrl: '/socket.io/' // Socket.io endpoint
+        }
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        message: error.message,
+        meta: {
+          timestamp: new Date().toISOString(),
+          requestId: req.id || 'unknown'
+        }
+      });
+    }
+  }
+
   async getAllItems(req, res) {
     try {
       const filters = {
@@ -262,6 +311,66 @@ class InventoryController {
       });
     } catch (error) {
       res.status(404).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  // --- Department-specific Allocation Methods ---
+
+  async getBarAllocations(req, res) {
+    try {
+      const allocations = await inventoryService.getAllocationsByDepartment('bar');
+      res.status(200).json({
+        success: true,
+        data: allocations,
+        meta: {
+          department: 'bar',
+          count: allocations.length
+        }
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  async getRestaurantAllocations(req, res) {
+    try {
+      const allocations = await inventoryService.getAllocationsByDepartment('restaurant');
+      res.status(200).json({
+        success: true,
+        data: allocations,
+        meta: {
+          department: 'restaurant',
+          count: allocations.length
+        }
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  async getDepartmentAllocations(req, res) {
+    try {
+      const { departmentCode } = req.params;
+      const allocations = await inventoryService.getAllocationsByDepartment(departmentCode);
+      res.status(200).json({
+        success: true,
+        data: allocations,
+        meta: {
+          department: departmentCode,
+          count: allocations.length
+        }
+      });
+    } catch (error) {
+      res.status(500).json({
         success: false,
         message: error.message
       });

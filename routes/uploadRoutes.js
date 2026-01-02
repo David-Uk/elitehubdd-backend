@@ -28,8 +28,9 @@ router.post('/profile',
 /**
  * Room image upload (single)
  */
+// Room image
 router.post('/room/:roomId',
-  authorize('admin', 'manager', 'receptionist'),
+  authorize('super_admin', 'admin', 'manager', 'receptionist', 'accountant', 'supervisor'),
   uploadRoomImage,
   handleMulterError,
   uploadController.uploadRoomImage
@@ -39,7 +40,7 @@ router.post('/room/:roomId',
  * Room images upload (multiple)
  */
 router.post('/room/:roomId/multiple',
-  authorize('admin', 'manager', 'receptionist'),
+  authorize('super_admin', 'admin', 'manager', 'receptionist', 'accountant', 'supervisor'),
   uploadRoomImages,
   handleMulterError,
   uploadController.uploadRoomImages
@@ -49,7 +50,7 @@ router.post('/room/:roomId/multiple',
  * Menu item image upload
  */
 router.post('/menu/:menuItemId',
-  authorize('admin', 'manager', 'restaurant_staff'),
+  authorize('super_admin', 'admin', 'manager', 'restaurant_staff', 'kitchen_staff', 'accountant', 'supervisor'), // Keeping restaurant_staff for safety
   uploadMenuImage,
   handleMulterError,
   uploadController.uploadMenuItemImage
@@ -59,7 +60,7 @@ router.post('/menu/:menuItemId',
  * Bar item image upload
  */
 router.post('/bar/:barItemId',
-  authorize('admin', 'manager', 'bar_staff'),
+  authorize('super_admin', 'admin', 'manager', 'bar_staff', 'waiter', 'accountant', 'supervisor'), // Keeping bar_staff for safety
   uploadBarImage,
   handleMulterError,
   uploadController.uploadBarItemImage
@@ -69,7 +70,7 @@ router.post('/bar/:barItemId',
  * Upload image with specific size limit
  */
 router.post('/with-size-limit',
-  authorize('admin', 'manager'),
+  authorize('super_admin', 'admin', 'manager'),
   uploadSingleFile,
   handleMulterError,
   uploadController.uploadImageWithSizeLimit
@@ -79,7 +80,7 @@ router.post('/with-size-limit',
  * Delete image
  */
 router.delete('/:publicId',
-  authorize('admin', 'manager'),
+  authorize('super_admin', 'admin', 'manager'),
   uploadController.deleteImage
 );
 

@@ -15,6 +15,18 @@ export default (sequelize, DataTypes) => {
         as: 'staff'
       });
       
+      // Order belongs to a batch
+      RestaurantOrder.belongsTo(models.OrderBatch, {
+        foreignKey: 'batchId',
+        as: 'batch'
+      });
+      
+      // Order belongs to a batch source
+      RestaurantOrder.belongsTo(models.BatchSource, {
+        foreignKey: 'batchSourceId',
+        as: 'batchSource'
+      });
+      
       // Order has many order items
       RestaurantOrder.hasMany(models.RestaurantOrderItem, {
         foreignKey: 'orderId',
@@ -43,6 +55,14 @@ export default (sequelize, DataTypes) => {
       type: DataTypes.UUID,
       allowNull: false,
       field: 'staff_id'
+    },
+    batchId: {
+      type: DataTypes.UUID,
+      field: 'batch_id'
+    },
+    batchSourceId: {
+      type: DataTypes.UUID,
+      field: 'batch_source_id'
     },
     tableNumber: {
       type: DataTypes.STRING,

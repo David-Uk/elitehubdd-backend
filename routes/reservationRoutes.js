@@ -1,25 +1,31 @@
 import express from 'express';
 import reservationController from '../controllers/reservationController.js';
-import { authenticate, authorize, authorizeDepartment } from '../middleware/auth.js';
+import { authenticate, authorize } from '../middleware/auth.js';
 import { cache, invalidateCache } from '../middleware/cache.js';
 import { validateReservation, validateUUID } from '../middleware/validator.js';
 
 const router = express.Router();
 
-// All routes require authentication
+// Public endpoint - Check room availability (no authentication required)
+router.get('/availability/check', 
+  cache(300),
+  reservationController.checkRoomAvailability
+);
+
+// All routes below require authentication
 router.use(authenticate);
 
-// Create reservation - Reception Department
+// Create reservation
 router.post('/', 
-  authorizeDepartment('reception'),
+  authorize('super_admin', 'admin', 'accountant', 'supervisor', 'manager', 'receptionist'),
   validateReservation,
   invalidateCache(['/api/reservations*', '/api/reports*']),
   reservationController.createReservation
 );
 
-// Get all reservations - Reception or Management
+// Get all reservations
 router.get('/', 
-  authorizeDepartment('reception', 'management'),
+  authorize('super_admin', 'admin', 'accountant', 'supervisor', 'manager', 'receptionist'),
   cache(300),
   reservationController.getAllReservations
 );
@@ -27,32 +33,31 @@ router.get('/',
 // Get reservation by ID
 router.get('/:id', 
   validateUUID,
-  authorizeDepartment('reception', 'management'),
+  authorize('super_admin', 'admin', 'accountant', 'supervisor', 'manager', 'receptionist'),
   cache(300),
   reservationController.getReservationById
 );
 
-// Check-in - Reception Department
+// Check-in
 router.post('/:id/check-in', 
   validateUUID,
-  authorizeDepartment('reception'),
+  authorize('super_admin', 'admin', 'accountant', 'supervisor', 'manager', 'receptionist'),
   invalidateCache(['/api/reservations*', '/api/reports*']),
   reservationController.checkIn
 );
 
-// Check-out - Reception Department
+// Check-out
 router.post('/:id/check-out', 
   validateUUID,
-  authorizeDepartment('reception'),
+  authorize('super_admin', 'admin', 'accountant', 'supervisor', 'manager', 'receptionist'),
   invalidateCache(['/api/reservations*', '/api/reports*']),
   reservationController.checkOut
 );
 
-// Cancel reservation (admin/manager only) - Management Department
+// Cancel reservation (restricted)
 router.post('/:id/cancel', 
   validateUUID,
-  authorize('admin', 'manager'),
-  authorizeDepartment('management', 'reception'), // Managers or Reception lead? Using management as primary, but reception often needs to cancel. Adding both.
+  authorize('super_admin', 'admin', 'accountant', 'supervisor', 'manager'),
   invalidateCache(['/api/reservations*', '/api/reports*']),
   reservationController.cancelReservation
 );

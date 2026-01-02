@@ -45,7 +45,7 @@ export default (sequelize, DataTypes) => {
         isEmail: true
       }
     },
-    phoneNumber: {
+    phone: {
       type: DataTypes.STRING,
       allowNull: false,
       field: 'phone_number',
@@ -82,6 +82,9 @@ export default (sequelize, DataTypes) => {
     preferences: {
       type: DataTypes.JSON,
       defaultValue: {}
+    },
+    notes: {
+      type: DataTypes.TEXT
     }
   }, {
     sequelize,

@@ -1,81 +1,119 @@
-import db from '../models/index.js';
-const { Notification } = db;
+import notificationService from '../services/notificationService.js';
 
 /**
- * Middleware to log user activities/actions
+ * Middleware to log API actions automatically
  */
-const activityLogger = async (req, res, next) => {
-  // Only log if user is authenticated
-  if (!req.user) {
-    return next();
-  }
-
-  // Intercept the response to log only on success (optional, but requested "performed")
-  // Or log the intent. Usually, auditing logs the intent and then the result.
-  // We'll log after the response is finished to know if it succeeded.
-  
+export const activityLogger = (req, res, next) => {
+  // Capture original end function
   const originalEnd = res.end;
-  const startTime = Date.now();
+  // const startTime = Date.now(); // Unused
 
-  res.end = function (...args) {
-    const duration = Date.now() - startTime;
-    const statusCode = res.statusCode;
-    
-    // Only log state-changing methods or as configured
-    const stateChangingMethods = ['POST', 'PUT', 'PATCH', 'DELETE'];
-    
-    if (stateChangingMethods.includes(req.method) && statusCode < 400) {
-      // Determine action string
-      let action = `${req.method}_${req.baseUrl || ''}${req.path}`
-        .replace(/\//g, '_')
-        .toUpperCase()
-        .replace(/^_/, '');
-      
-      // Cleanup action string
-      // e.g., POST_API_RESERVATIONS
-      
-      const message = `${req.user.role} ${req.user.email} performed ${req.method} on ${req.originalUrl}`;
+  // Function to intercept response finish
+  res.end = function(chunk, encoding) {
+    // Call original end first
+    originalEnd.apply(res, [chunk, encoding]);
 
-      // Prepare metadata (sensitive fields should be filtered)
+    // After response is sent (next tick maybe, to ensure headers sent)
+    // We only log if it's a mutation (POST, PUT, PATCH, DELETE) and successful (2xx)
+    // We can also log errors if needed, but prompt implies "actions when conducted" (successful actions usually).
+    // Let's log successes.
+    
+    // Check if status is 2xx
+    if (res.statusCode >= 200 && res.statusCode < 300) {
+      // Ignore GET requests (usually) unless specific critical reads?
+      // Prompt: "All API actions".
+      // Creating, updating, deleting are "actions". Reading is "viewing".
+      // I'll filter out GET and OPTIONS.
+      if (['GET', 'OPTIONS', 'HEAD'].includes(req.method)) return;
+
+      const userId = req.user ? req.user.id : null;
+      const staffId = req.user && req.user.staffId ? req.user.staffId : null; // Assuming staffId exists on req.user if populated
+      
+      // Determine Action Name
+      // Map Method + URL to Action
+      // e.g. POST /api/inventory/items -> INVENTORY_ITEM_CREATE
+      const action = deriveAction(req);
+      const message = deriveMessage(req);
+      const targetRoles = deriveTargetRoles(req);
+      
       const metadata = {
         method: req.method,
         url: req.originalUrl,
-        statusCode,
-        duration,
+        params: req.params,
         query: req.query,
-        // body: req.body // Be careful with body, might contain passwords. Use filtering if needed.
+        body: req.method !== 'GET' ? req.body : undefined, // Be careful with sensitive data?
+        actor: req.user ? {
+          id: req.user.id,
+          username: req.user.username,
+          email: req.user.email,
+          role: req.user.role,
+          staffId: req.user.staffId
+          // Add staff name if available on req.user (depends on validaton/auth middleware population)
+        } : 'system' 
       };
 
-      // Filter sensitive fields from metadata body if we were to include it
-      if (req.body) {
-        const sensitiveFields = ['password', 'token', 'secret', 'creditCard'];
-        const filteredBody = { ...req.body };
-        sensitiveFields.forEach(field => {
-          if (filteredBody[field]) filteredBody[field] = '********';
-        });
-        metadata.body = filteredBody;
-      }
+      // Sanitize metadata
+      if (metadata.body && metadata.body.password) metadata.body.password = '***';
 
-      // Record the notification/activity in background
-      Notification.create({
-        staffId: req.user.id, // Assuming req.user.id is the staff ID
-        userId: null, // If there's a separate User model, logic would go here
-        action: action,
-        type: statusCode >= 400 ? 'error' : 'info',
-        message: message,
-        metadata: metadata,
-        ipAddress: req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress,
-        userAgent: req.headers['user-agent'],
-        read: false
-      }).catch(err => {
-        console.error('Failed to create activity log:', err);
-      });
+      notificationService.logAction({
+        action,
+        message,
+        userId,
+        staffId,
+        targetRoles,
+        metadata,
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        type: 'success'
+      }).catch(err => console.error('Error logging activity:', err));
     }
-
-    return originalEnd.apply(this, args);
   };
 
   next();
 };
 
-export default activityLogger;
+// Helper to derive action name
+function deriveAction(req) {
+  const method = req.method;
+  const path = req.baseUrl || req.path;
+  const cleanPath = path.replace(/\/api\//, '').replace(/\//g, '_').toUpperCase(); // e.g. INVENTORY_ITEMS
+  
+  // Refine action from path parameters
+  // e.g. inventory_items_123_stock -> INVENTORY_ITEMS_STOCK
+  // Remove UUIDs from path
+  // UUID regex roughly: [0-9a-f]{8}-... or just long alphanumeric strings
+  // Simple heuristic: remove segments with numbers or > 20 chars?
+  // Or verify against routes?
+  // Let's do a simple replace of UUID-like strings with 'ID'
+  const actionPath = cleanPath.replace(/[0-9a-f-]{20,}/gi, 'ID');
+  
+  return `${method}_${actionPath}`;
+}
+
+// Helper to derive human readable message
+function deriveMessage(req) {
+  // Can be improved with a map
+  const methodStr = req.method;
+  const resource = req.baseUrl.split('/').pop() || 'Resource';
+  return `${methodStr} action on ${resource}`;
+}
+
+// Helper to derive target roles
+function deriveTargetRoles(req) {
+  // Default roles are Admin/Super Admin (handled in service)
+  // We add specific roles based on domain
+  const roles = [];
+  const url = req.baseUrl;
+
+  if (url.includes('inventory')) roles.push('accountant');
+  if (url.includes('reservations')) roles.push('receptionist', 'manager', 'supervisor');
+  if (url.includes('orders')) roles.push('waiter', 'kitchen_staff', 'manager', 'supervisor'); // Generic
+  if (url.includes('bar')) roles.push('bar_staff', 'manager', 'supervisor');
+  if (url.includes('restaurant')) roles.push('restaurant_staff', 'manager', 'supervisor');
+  if (url.includes('staff') || url.includes('users')) roles.push('admin'); // HR?
+
+  // specific
+  if (url.includes('report')) roles.push('accountant', 'manager', 'supervisor');
+
+  return roles;
+}

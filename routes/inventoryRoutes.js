@@ -1,8 +1,8 @@
 import express from 'express';
 import inventoryController from '../controllers/inventoryController.js';
-import { authenticate, authorize, authorizeDepartment } from '../middleware/auth.js';
+import { authenticate, authorize } from '../middleware/auth.js';
 import { cache, invalidateCache } from '../middleware/cache.js';
-import { validateUUID } from '../middleware/validator.js';
+import { validateUUID, validateInventoryItem, validateBatchInventoryItems, validateInventoryTransaction } from '../middleware/validator.js';
 
 const router = express.Router();
 
@@ -12,10 +12,17 @@ router.use(authenticate);
 // --- Items ---
 
 router.post('/items',
-  authorize('admin', 'manager', 'store_keeper'),
-  authorizeDepartment('management'),
+  authorize('super_admin', 'admin'), // Restricted to Admin
+  validateInventoryItem,
   invalidateCache(['/api/inventory/items*']),
   inventoryController.createItem
+);
+
+router.post('/items/batch',
+  authorize('super_admin', 'admin'), // Restricted to Admin
+  validateBatchInventoryItems,
+  invalidateCache(['/api/inventory/items*']),
+  inventoryController.createBatchItems
 );
 
 router.get('/items',
@@ -31,37 +38,35 @@ router.get('/items/:id',
 
 router.patch('/items/:id',
   validateUUID,
-  authorize('admin', 'manager', 'store_keeper'),
-  authorizeDepartment('management'),
+  authorize('super_admin', 'admin'),
+  validateInventoryItem,
   invalidateCache(['/api/inventory/items*']),
   inventoryController.updateItem
 );
 
 router.delete('/items/:id',
   validateUUID,
-  authorize('admin', 'manager'),
-  authorizeDepartment('management'),
+  authorize('super_admin', 'admin'),
   invalidateCache(['/api/inventory/items*']),
   inventoryController.deleteItem
 );
 
 // --- Stock Management ---
 
-// Add new stock (receive items) - Management Only
+// Add new stock (receive items)
 router.post('/items/:itemId/stock',
-  authorize('admin', 'manager', 'store_keeper'),
-  authorizeDepartment('management'),
+  validateUUID,
+  authorize('super_admin', 'admin'),
+  validateInventoryTransaction,
   invalidateCache(['/api/inventory/items*']),
   inventoryController.addStock
 );
 
-// Allocate stock (use items) - Can trigger allocation request, but maybe restricted?
-// Request said "The inventory should be handled only a staff with management department"
-// So allocation (reducing stock) should also be management only?
-// Or maybe other departments can REQUEST allocation?
-// For now, restricting strict inventory updates to management.
+// Allocate stock (use items)
 router.post('/items/:itemId/allocate',
-  authorizeDepartment('management'),
+  validateUUID,
+  authorize('super_admin', 'admin'), // Restricted to Admin
+  validateInventoryTransaction,
   invalidateCache(['/api/inventory/items*']),
   inventoryController.allocateStock
 );
@@ -78,8 +83,8 @@ router.get('/items/:itemId/history',
 // Create allocation - Allocate stock to a department
 router.post('/items/:itemId/allocations',
   validateUUID,
-  authorize('admin', 'manager', 'store_keeper'),
-  authorizeDepartment('management'),
+  authorize('super_admin', 'admin'),
+  validateInventoryTransaction,
   invalidateCache(['/api/inventory/items*']),
   inventoryController.createAllocation
 );
@@ -94,8 +99,8 @@ router.get('/items/:itemId/allocations',
 // Create addition - Add new stock
 router.post('/items/:itemId/additions',
   validateUUID,
-  authorize('admin', 'manager', 'store_keeper'),
-  authorizeDepartment('management'),
+  authorize('super_admin', 'admin'),
+  validateInventoryTransaction,
   invalidateCache(['/api/inventory/items*']),
   inventoryController.createAddition
 );
@@ -110,8 +115,8 @@ router.get('/items/:itemId/additions',
 // Create subtraction - Reduce stock (damage, loss, etc.)
 router.post('/items/:itemId/subtractions',
   validateUUID,
-  authorize('admin', 'manager', 'store_keeper'),
-  authorizeDepartment('management'),
+  authorize('super_admin', 'admin'),
+  validateInventoryTransaction,
   invalidateCache(['/api/inventory/items*']),
   inventoryController.createSubtraction
 );
@@ -128,6 +133,26 @@ router.get('/items/:itemId/transactions',
   validateUUID,
   cache(60),
   inventoryController.getItemWithTransactions
+);
+
+// --- Department-specific Allocations ---
+
+// Get all items allocated to bar
+router.get('/allocations/bar',
+  cache(60),
+  inventoryController.getBarAllocations
+);
+
+// Get all items allocated to restaurant
+router.get('/allocations/restaurant',
+  cache(60),
+  inventoryController.getRestaurantAllocations
+);
+
+// Get allocations by department code
+router.get('/allocations/department/:departmentCode',
+  cache(60),
+  inventoryController.getDepartmentAllocations
 );
 
 export default router;

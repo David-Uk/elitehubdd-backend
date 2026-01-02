@@ -208,6 +208,39 @@ class BarService {
   }
 
   /**
+   * Create new bar item
+   */
+  async createBarItem(itemData) {
+    const { name, category, price, description, brand, volume, alcoholContent, stock, reorderLevel, productImage } = itemData;
+
+    // Check if item with same name already exists
+    const existingItem = await BarItem.findOne({
+      where: { name }
+    });
+
+    if (existingItem) {
+      throw new Error(`Bar item with name '${name}' already exists`);
+    }
+
+    // Create the bar item
+    const barItem = await BarItem.create({
+      name,
+      category,
+      price,
+      description,
+      brand,
+      volume,
+      alcoholContent,
+      stock: stock || 0,
+      reorderLevel: reorderLevel || 10,
+      productImage,
+      isAvailable: true
+    });
+
+    return barItem;
+  }
+
+  /**
    * Get bar items
    */
   async getBarItems(filters = {}) {

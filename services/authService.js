@@ -1,5 +1,7 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
+import emailService from './emailService.js';
 import db from '../models/index.js';
 
 const { Staff } = db;
@@ -105,9 +107,31 @@ class AuthService {
       throw new Error('Maximum limit of 4 admin accounts reached');
     }
 
-    // Set role to admin and reuse register logic
+    // Set role to admin, status to active, hireDate to today, ignore address
     adminData.role = 'admin';
+    adminData.status = 'active';
+    adminData.hireDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    adminData.address = null;
     return await this.register(adminData);
+  }
+
+  /**
+   * Register the Super Admin (Limited to 1, only if none exists)
+   */
+  async registerSuperAdmin(superAdminData) {
+    // Check if any super admin exists
+    const superAdminCount = await Staff.count({ where: { role: 'super_admin' } });
+    if (superAdminCount > 0) {
+      throw new Error('Super Admin already exists. Only one super admin is allowed.');
+    }
+
+    // Set role to super_admin, status to active, hireDate to today, ignore address
+    superAdminData.role = 'super_admin';
+    superAdminData.status = 'active';
+    superAdminData.hireDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    superAdminData.address = null;
+    
+    return await this.register(superAdminData);
   }
 
   /**
@@ -232,6 +256,82 @@ class AuthService {
     await staff.update({ password: hashedPassword });
 
     return { message: 'Password changed successfully' };
+  }
+
+  /**
+   * Request password reset
+   */
+  async forgotPassword(email) {
+    const staff = await Staff.findOne({ where: { email } });
+
+    if (!staff) {
+      throw new Error('There is no user with that email address.');
+    }
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    // Hash token and save to database
+    const passwordResetToken = crypto
+      .createHash('sha256')
+      .update(resetToken)
+      .digest('hex');
+    
+    // Set expiration (e.g., 10 minutes)
+    const passwordResetExpires = Date.now() + 10 * 60 * 1000;
+
+    await staff.update({
+      passwordResetToken,
+      passwordResetExpires
+    });
+
+    try {
+      await emailService.sendPasswordResetEmail(staff.email, resetToken);
+      return { message: 'Token sent to email!' };
+    } catch (error) {
+      // If email sending fails, clear the token fields
+      await staff.update({
+        passwordResetToken: null,
+        passwordResetExpires: null
+      });
+      throw new Error('There was an error sending the email. Try again later!');
+    }
+  }
+
+  /**
+   * Reset password
+   */
+  async resetPassword(token, newPassword) {
+    // Hash the token
+    const hashedToken = crypto
+      .createHash('sha256')
+      .update(token)
+      .digest('hex');
+
+    // Find user with token and checking expiration
+    const staff = await Staff.findOne({
+      where: {
+        passwordResetToken: hashedToken,
+        passwordResetExpires: { [db.Sequelize.Op.gt]: Date.now() } // Expiry > now
+      }
+    });
+
+    if (!staff) {
+      throw new Error('Token is invalid or has expired');
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update staff
+    await staff.update({
+      password: hashedPassword,
+      passwordResetToken: null,
+      passwordResetExpires: null
+    });
+
+    // Log the user in? Or just return success.
+    // Usually return success and ask to login.
+    return { message: 'Password reset successful' };
   }
 }
 

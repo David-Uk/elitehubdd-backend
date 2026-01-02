@@ -1,9 +1,9 @@
 import express from 'express';
 import authController from '../controllers/authController.js';
 import { authenticate } from '../middleware/auth.js';
-import { authLimiter, registerLimiter, passwordResetLimiter } from '../middleware/rateLimiter.js';
 import { 
-  validateStaffRegistration, 
+  validateStaffRegistration,
+  validateAdminRegistration,
   validateLogin, 
   validatePasswordChange 
 } from '../middleware/validator.js';
@@ -11,20 +11,25 @@ import {
 const router = express.Router();
 
 // Public routes with rate limiting
+// Register routes
 router.post('/register', 
-  registerLimiter,
+  authenticate,
   validateStaffRegistration,
   authController.register
 );
 
 router.post('/register-admin',
   authenticate,
-  // isAdmin, // We can add isAdmin here if we want only admins to create other admins
+  validateAdminRegistration,
   authController.registerAdmin
 );
 
+router.post('/register-super-admin',
+  validateAdminRegistration,
+  authController.registerSuperAdmin
+);
+
 router.post('/login', 
-  authLimiter,
   validateLogin,
   authController.login
 );
@@ -37,9 +42,16 @@ router.get('/profile',
 
 router.post('/change-password', 
   authenticate,
-  passwordResetLimiter,
   validatePasswordChange,
   authController.changePassword
+);
+
+router.post('/forgot-password',
+  authController.forgotPassword
+);
+
+router.post('/reset-password/:token',
+  authController.resetPassword
 );
 
 export default router;

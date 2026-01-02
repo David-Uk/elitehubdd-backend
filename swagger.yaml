@@ -13,6 +13,24 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
+    ForgotPasswordRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+          example: admin@elitehub.com
+    ResetPasswordRequest:
+      type: object
+      required:
+        - password
+      properties:
+        password:
+          type: string
+          format: password
+          minLength: 8
     Staff:
       type: object
       properties:
@@ -34,15 +52,18 @@ components:
         role:
           type: string
           enum:
-            [
-              admin,
-              manager,
-              receptionist,
-              housekeeping,
-              restaurant_staff,
-              bar_staff,
-              maintenance,
-            ]
+            - super_admin
+            - admin
+            - accountant
+            - supervisor
+            - manager
+            - receptionist
+            - housekeeping
+            - restaurant_staff
+            - bar_staff
+            - waiter
+            - kitchen_staff
+            - maintenance
         department:
           type: string
           enum: [reception, housekeeping, maintenance, management, restaurant]
@@ -74,9 +95,11 @@ components:
         createdAt:
           type: string
           format: date-time
+          readOnly: true
         updatedAt:
           type: string
           format: date-time
+          readOnly: true
     LoginRequest:
       type: object
       required:
@@ -91,7 +114,39 @@ components:
           type: string
           format: password
           example: Password123!
-    RegisterRequest:
+    RegisterAdminRequest:
+      type: object
+      required:
+        - email
+        - password
+        - firstName
+        - lastName
+        - gender
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+          minLength: 8
+        firstName:
+          type: string
+        lastName:
+          type: string
+        fullName:
+          type: string
+          description: "Optional: Can provide instead of firstName/lastName"
+        phoneNumber:
+          type: string
+        position:
+          type: string
+        gender:
+          type: string
+          enum: [male, female]
+    RegisterStaffRequest:
       type: object
       required:
         - email
@@ -122,7 +177,6 @@ components:
           type: string
           enum:
             [
-              admin,
               manager,
               receptionist,
               housekeeping,
@@ -303,6 +357,7 @@ components:
         createdAt:
           type: string
           format: date-time
+          readOnly: true
         supplier:
           type: string
     Department:
@@ -353,9 +408,11 @@ components:
         createdAt:
           type: string
           format: date-time
+          readOnly: true
         updatedAt:
           type: string
           format: date-time
+          readOnly: true
     CreateDepartmentRequest:
       type: object
       required:
@@ -420,17 +477,92 @@ paths:
                         $ref: "#/components/schemas/Staff"
         401:
           description: Invalid credentials
-  /auth/register:
+  /auth/register-super-admin:
     post:
-      summary: Register new staff (Admin only)
-      description: Create a new staff account. Requires Admin privileges.
+      summary: Register Super Admin (Public - One Time)
+      description: Register the first Super Admin. Fails if a Super Admin already exists. No authentication required. Super Admin has access to all departments and does not require a department field.
+      tags: [Auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterAdminRequest"
+      responses:
+        201:
+          description: Super Admin registered successfully
+        400:
+          description: Super Admin already exists or Validation Error
+
+  /auth/register-admin:
+    post:
+      summary: Register Admin (Super Admin only)
+      description: Register a new Admin. Limited to 4 Admins total. Restricted to Super Admin. Admin has access to all departments and does not require a department field.
       tags: [Auth]
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RegisterRequest"
+              $ref: "#/components/schemas/RegisterAdminRequest"
+      responses:
+        201:
+          description: Admin registered successfully
+        400:
+          description: Limit reached or Validation Error
+
+  /auth/forgot-password:
+    post:
+      summary: Request Password Reset
+      tags: [Auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ForgotPasswordRequest"
+      responses:
+        200:
+          description: Token sent to email
+        400:
+          description: User not found
+
+  /auth/reset-password/{token}:
+    post:
+      summary: Reset Password
+      tags: [Auth]
+      security: []
+      parameters:
+        - in: path
+          name: token
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResetPasswordRequest"
+      responses:
+        200:
+          description: Password reset successful
+        400:
+          description: Invalid or expired token
+
+  /auth/register:
+    post:
+      summary: Register new staff (Admin/Super Admin only)
+      description: Create a new staff account. Requires Admin privileges. Regular staff requires a department assignment.
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterStaffRequest"
       responses:
         201:
           description: Registration successful
@@ -663,7 +795,7 @@ paths:
                         type: integer
     post:
       summary: Create inventory item
-      description: Create a new inventory item. Restricted to Management department (Admin, Manager, Store Keeper).
+      description: Create a new inventory item. Restricted to Super Admin, Admin.
       tags: [Inventory]
       requestBody:
         required: true
@@ -713,7 +845,7 @@ paths:
                     $ref: "#/components/schemas/InventoryItem"
     patch:
       summary: Update inventory item
-      description: Update item details. Restricted to Management department.
+      description: Update item details. Restricted to Super Admin, Admin.
       tags: [Inventory]
       parameters:
         - in: path
@@ -733,7 +865,7 @@ paths:
           description: Item updated successfully
     delete:
       summary: Delete inventory item
-      description: Delete an item. Restricted to Admin/Manager.
+      description: Delete an item. Restricted to Super Admin, Admin.
       tags: [Inventory]
       parameters:
         - in: path
@@ -749,7 +881,7 @@ paths:
   /inventory/items/{itemId}/stock:
     post:
       summary: Add stock (Receive items)
-      description: Add a new stock batch to an item. Restricted to Management department.
+      description: Add a new stock batch to an item. Restricted to Super Admin, Admin.
       tags: [Inventory]
       parameters:
         - in: path
@@ -783,7 +915,7 @@ paths:
   /inventory/items/{itemId}/allocate:
     post:
       summary: Allocate stock (Use items)
-      description: Reduce stock quantity using FIFO method. Restricted to Management department.
+      description: Reduce stock quantity using FIFO method. Restricted to Super Admin, Admin.
       tags: [Inventory]
       parameters:
         - in: path
@@ -798,6 +930,74 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/AllocateRequest"
+  
+  /inventory/items/{itemId}/allocations:
+    post:
+      summary: Create Allocation (Transfer to Dept)
+      description: Allocate stock to a department (e.g. Restaurant/Bar). Automatically transfers items if applicable. Restricted to Super Admin, Admin.
+      tags: [Inventory]
+      parameters:
+        - in: path
+          name: itemId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - quantity
+                - departmentId
+              properties:
+                quantity:
+                  type: integer
+                  minimum: 1
+                departmentId:
+                  type: string
+                  format: uuid
+                notes:
+                  type: string
+      responses:
+        201:
+          description: Allocation created and items transferred
+  
+  /inventory/items/{itemId}/subtractions:
+    post:
+      summary: Create Subtraction (Damage/Loss)
+      description: Reduce stock due to damage, loss, or expiry. Restricted to Super Admin, Admin.
+      tags: [Inventory]
+      parameters:
+        - in: path
+          name: itemId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - quantity
+                - reason
+              properties:
+                quantity:
+                  type: integer
+                  minimum: 1
+                reason:
+                  type: string
+                  enum: [damage, loss, expired, theft, other]
+                notes:
+                  type: string
+      responses:
+        201:
+          description: Subtraction recorded
       responses:
         200:
           description: Stock allocated successfully

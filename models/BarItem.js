@@ -35,9 +35,12 @@ export default (sequelize, DataTypes) => {
         'wine',
         'spirits',
         'cocktail',
+        'mocktail',
+        'shake',
         'soft_drink',
         'juice',
         'water',
+        'smoke',
         'other'
       ),
       allowNull: false

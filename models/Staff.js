@@ -91,10 +91,15 @@ export default (sequelize, DataTypes) => {
     },
     role: {
       type: DataTypes.ENUM(
+        'super_admin',
         'admin',
+        'accountant',
+        'supervisor',
         'manager',
         'receptionist',
         'housekeeping',
+        'waiter',
+        'kitchen_staff',
         'restaurant_staff',
         'bar_staff',
         'maintenance'
@@ -137,7 +142,7 @@ export default (sequelize, DataTypes) => {
       get() {
         return this.status === 'active';
       },
-      set(value) {
+      set(_value) {
         throw new Error('Do not try to set the `isActive` value!');
       }
     },
@@ -155,6 +160,14 @@ export default (sequelize, DataTypes) => {
     lastLogin: {
       type: DataTypes.DATE,
       field: 'last_login'
+    },
+    passwordResetToken: {
+      type: DataTypes.STRING,
+      field: 'password_reset_token'
+    },
+    passwordResetExpires: {
+      type: DataTypes.DATE,
+      field: 'password_reset_expires'
     }
   }, {
     sequelize,
