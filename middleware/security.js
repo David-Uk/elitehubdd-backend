@@ -40,30 +40,11 @@ export const helmetConfig = helmet({
  * Configure CORS
  */
 export const corsConfig = cors({
-  origin: (origin, callback) => {
-    const allowedOrigins = process.env.ALLOWED_ORIGINS 
-      ? process.env.ALLOWED_ORIGINS.split(',')
-      : [
-          'http://localhost:3000', 
-          'http://localhost:5173',
-          'https://elitehubdd-backend.onrender.com',
-          'https://elitehubdd-backend.onrender.com/',
-          'https://elitehubdd-backend.onrender.com/assets'
-        ];
-    
-    // Allow requests with no origin (mobile apps, Postman, etc.)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: '*', // Allow all origins
   credentials: true,
   optionsSuccessStatus: 200,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'X-Requested-With', 'Accept']
 });
 
 /**

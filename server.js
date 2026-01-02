@@ -19,7 +19,10 @@ const __dirname = path.dirname(__filename);
 
 const debug = Debug('backend:server');
 
-// Security middleware removed
+// Import security middleware for CORS
+import {
+  corsConfig
+} from './middleware/security.js';
 import { activityLogger } from './middleware/activityLogger.js';
 
 // Rate limiters removed
@@ -49,6 +52,9 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Trust proxy removed
+
+// CORS middleware enabled - allow all origins
+app.use(corsConfig);
 
 // Security middleware removed
 
