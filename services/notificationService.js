@@ -72,34 +72,29 @@ class NotificationService {
    * Get notifications for a user based on their role
    */
   async getNotifications(user, query = {}) {
-    // Logic to fetch notifications where user.role is in targetRoles
-    // Postgres JSONB containment: target_roles @> '["role"]' or similar
-    // Since target_roles is JSONB array:
-    
-    // Simplest: use Op.contains if using Postgres JSONB
-    // If user is super_admin or admin, return everything?
-    // User request: "All notifications... are visible to ... staff of similar roles".
-    // super_admin/admin should see ALL? Implicitly yes via targetRoles inclusion, 
-    // or explicitly bypassing check.
-    
     const { page = 1, limit = 20, type } = query;
     const offset = (page - 1) * limit;
     
     const where = {};
     if (type) where.type = type;
 
-    // Visibility filter
+    // Visibility filter based on user role
     if (user.role === 'super_admin' || user.role === 'admin') {
-      // Admins see all? Or only those targeted to admins?
-      // Prompt: "All notifications... visible to super admin, admin".
-      // So no filter on targetRoles needed for them?
-      // "All notifications for all actions are visible to the super admin".
-      // Yes. So remove targetRoles check for them.
+      // Admins and super admins see all notifications
+      // No filter needed on targetRoles
     } else {
-      // For others
-      where.targetRoles = {
-        [db.Sequelize.Op.contains]: [user.role]
-      };
+      // Other users see notifications where their role is in targetRoles
+      // AND notifications they created themselves
+      where[db.Sequelize.Op.or] = [
+        {
+          targetRoles: {
+            [db.Sequelize.Op.contains]: [user.role]
+          }
+        },
+        {
+          staffId: user.id // User can see their own actions
+        }
+      ];
     }
 
     const { count, rows } = await Notification.findAndCountAll({
@@ -122,6 +117,139 @@ class NotificationService {
         totalPages: Math.ceil(count / limit)
       }
     };
+  }
+
+  /**
+   * Log API action - called by middleware
+   */
+  async logApiAction(req, res, next) {
+    // Skip logging for GET requests
+    if (req.method === 'GET') {
+      return next();
+    }
+
+    try {
+      const user = req.user;
+      if (!user) {
+        return next(); // Skip if no authenticated user
+      }
+
+      // Extract action details from request
+      const action = this.getActionFromRequest(req);
+      const message = this.getMessageFromRequest(req, res);
+      
+      // Determine target roles based on action
+      const targetRoles = this.getTargetRolesForAction(action, user.role);
+
+      await this.logAction({
+        action,
+        message,
+        staffId: user.id,
+        targetRoles,
+        metadata: {
+          method: req.method,
+          url: req.originalUrl,
+          body: req.body,
+          params: req.params,
+          query: req.query,
+          statusCode: res.statusCode
+        },
+        ipAddress: req.ip || req.connection.remoteAddress,
+        userAgent: req.get('User-Agent'),
+        type: this.getNotificationType(res.statusCode)
+      });
+    } catch (error) {
+      console.error('Failed to log API action:', error);
+      // Don't fail the request
+    }
+
+    return next();
+  }
+
+  /**
+   * Extract action identifier from request
+   */
+  getActionFromRequest(req) {
+    const method = req.method;
+    const route = req.route?.path || req.path;
+    
+    // Map common routes to action identifiers
+    const routeMap = {
+      '/reservations': 'RESERVATION',
+      '/orders': 'ORDER',
+      '/batches': 'BATCH',
+      '/menu-items': 'MENU_ITEM',
+      '/inventory': 'INVENTORY',
+      '/staff': 'STAFF',
+      '/auth': 'AUTH',
+      '/reports': 'REPORT'
+    };
+
+    // Find the matching route
+    for (const [routePath, prefix] of Object.entries(routeMap)) {
+      if (route.includes(routePath)) {
+        return `${method}_${prefix}`;
+      }
+    }
+
+    // Fallback
+    return `${method}_API_CALL`;
+  }
+
+  /**
+   * Generate human readable message from request
+   */
+  getMessageFromRequest(req, res) {
+    const user = req.user;
+    const userName = user ? `${user.firstName} ${user.lastName}` : 'Unknown User';
+    const method = req.method;
+    const route = req.route?.path || req.path;
+    const success = res.statusCode < 400;
+
+    let action = '';
+    if (method === 'POST') action = 'created';
+    else if (method === 'PUT' || method === 'PATCH') action = 'updated';
+    else if (method === 'DELETE') action = 'deleted';
+    else action = 'accessed';
+
+    return `${userName} ${action} ${route} ${success ? 'successfully' : 'with errors'}`;
+  }
+
+  /**
+   * Determine which roles should see this notification
+   */
+  getTargetRolesForAction(action, userRole) {
+    // Admin and super admin see everything
+    const baseRoles = ['super_admin', 'admin'];
+    
+    // Add the user's role so they can see their own actions
+    const userRoles = [userRole];
+    
+    // Add specific roles based on action type
+    const actionRoles = [];
+    if (action.includes('RESERVATION')) {
+      actionRoles.push('supervisor', 'front_desk');
+    } else if (action.includes('ORDER') || action.includes('BATCH')) {
+      actionRoles.push('kitchen_staff', 'waiter', 'supervisor');
+    } else if (action.includes('MENU_ITEM')) {
+      actionRoles.push('kitchen_staff', 'supervisor');
+    } else if (action.includes('INVENTORY')) {
+      actionRoles.push('supervisor', 'store_keeper');
+    } else if (action.includes('STAFF')) {
+      actionRoles.push('supervisor', 'hr');
+    }
+
+    return [...new Set([...baseRoles, ...userRoles, ...actionRoles])];
+  }
+
+  /**
+   * Get notification type based on status code
+   */
+  getNotificationType(statusCode) {
+    if (statusCode >= 400) return 'error';
+    if (statusCode >= 300) return 'warning';
+    if (statusCode >= 200) return 'success';
+    return 'info';
   }
 
   /**

@@ -2,14 +2,27 @@ import express from 'express';
 import reservationController from '../controllers/reservationController.js';
 import { authenticate, authorize } from '../middleware/auth.js';
 import { cache, invalidateCache } from '../middleware/cache.js';
-import { validateReservation, validateUUID } from '../middleware/validator.js';
+import { validateReservation, validateGuestReservation, validateUUID } from '../middleware/validator.js';
 
 const router = express.Router();
 
-// Public endpoint - Check room availability (no authentication required)
+// Public endpoints - No authentication required
 router.get('/availability/check', 
   cache(300),
   reservationController.checkRoomAvailability
+);
+
+// Public endpoint - View all available bookings (for guests)
+router.get('/available', 
+  cache(300),
+  reservationController.getAvailableBookings
+);
+
+// Public endpoint - Create guest reservation (no authentication required)
+router.post('/guest', 
+  validateGuestReservation,
+  invalidateCache(['/api/reservations*', '/api/reports*']),
+  reservationController.createGuestReservation
 );
 
 // All routes below require authentication

@@ -344,7 +344,95 @@ export const validateRoom = [
 ];
 
 /**
- * Reservation validation
+ * Guest reservation validation (for public endpoint)
+ */
+export const validateGuestReservation = [
+  // Guest information validation
+  body('guestFirstName')
+    .trim()
+    .notEmpty()
+    .withMessage('Guest first name is required')
+    .isLength({ min: 2, max: 50 })
+    .withMessage('First name must be between 2 and 50 characters'),
+  
+  body('guestLastName')
+    .trim()
+    .notEmpty()
+    .withMessage('Guest last name is required')
+    .isLength({ min: 2, max: 50 })
+    .withMessage('Last name must be between 2 and 50 characters'),
+  
+  body('guestEmail')
+    .trim()
+    .notEmpty()
+    .withMessage('Guest email is required')
+    .isEmail()
+    .withMessage('Invalid email format'),
+  
+  body('guestPhone')
+    .optional()
+    .isMobilePhone('any', { strictMode: false })
+    .withMessage('Invalid phone number format'),
+  
+  // Room type validation (instead of specific room)
+  body('roomTypeId')
+    .notEmpty()
+    .withMessage('Room type ID is required')
+    .isUUID()
+    .withMessage('Invalid room type ID format'),
+  
+  // Date validation
+  body('checkInDate')
+    .notEmpty()
+    .withMessage('Check-in date is required')
+    .isISO8601()
+    .withMessage('Invalid check-in date format')
+    .custom((value) => {
+      const checkIn = new Date(value);
+      const today = new Date();
+      // Set today's time to midnight for date-only comparison
+      today.setHours(0, 0, 0, 0);
+      
+      // Set check-in time to midnight for date-only comparison
+      const checkInDate = new Date(checkIn);
+      checkInDate.setHours(0, 0, 0, 0);
+      
+      if (checkInDate < today) {
+        throw new Error('Check-in date cannot be in the past');
+      }
+      return true;
+    }),
+  
+  body('checkOutDate')
+    .notEmpty()
+    .withMessage('Check-out date is required')
+    .isISO8601()
+    .withMessage('Invalid check-out date format')
+    .custom((value, { req }) => {
+      const checkOut = new Date(value);
+      const checkIn = new Date(req.body.checkInDate);
+      if (checkOut <= checkIn) {
+        throw new Error('Check-out date must be after check-in date');
+      }
+      return true;
+    }),
+  
+  // Number of guests validation
+  body('numberOfGuests')
+    .notEmpty()
+    .withMessage('Number of guests is required')
+    .isInt({ min: 1, max: 10 })
+    .withMessage('Number of guests must be between 1 and 10'),
+  
+  // Optional fields
+  body('specialRequests')
+    .optional()
+    .isLength({ max: 1000 })
+    .withMessage('Special requests must not exceed 1000 characters')
+];
+
+/**
+ * Reservation validation (for staff/internal use)
  */
 export const validateReservation = [
   // Either guestId (for existing guest) OR guest object (for new guest) is required

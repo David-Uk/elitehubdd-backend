@@ -7,9 +7,15 @@ import morgan from 'morgan';
 import logger from './config/logger.js';
 import redisClient from './config/redis.js';
 import connectDB from './db.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import Debug from 'debug';
 import swaggerUi from 'swagger-ui-express';
 import YAML from 'yamljs';
+
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const debug = Debug('backend:server');
 
@@ -41,6 +47,7 @@ import uploadRoutes from './routes/uploadRoutes.js';
 import inventoryRoutes from './routes/inventoryRoutes.js';
 import departmentRoutes from './routes/departmentRoutes.js';
 import guestRoutes from './routes/guestRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
 
 // Import Socket.io service
 import socketService from './services/socketService.js';
@@ -110,8 +117,14 @@ app.use(morgan(morganFormat, {
 app.use('/api/', apiLimiter);
 app.use('/api/', slowDown);
 
-// Routes
-app.get('/', (req, res) => {
+// Apply activity logger to log all API calls
+app.use('/api/', activityLogger);
+
+// Serve React static files from dist directory
+app.use(express.static(path.join(__dirname, 'dist')));
+
+// API routes - serve React app for non-API routes
+app.get('/api', (req, res) => {
   res.json({ 
     message: 'Welcome to EliteHub Hotel Management API',
     version: '2.0.0',
@@ -136,6 +149,7 @@ app.get('/', (req, res) => {
       departments: '/api/departments',
       users: '/api/users',
       guests: '/api/guests',
+      notifications: '/api/notifications',
       health: '/health',
       metrics: '/metrics'
     }
@@ -159,6 +173,7 @@ app.use('/api/inventory', inventoryRoutes);
 app.use('/api/departments', departmentRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/guests', guestRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Swagger Documentation
 const swaggerDocument = YAML.load('./swagger.yaml');
@@ -226,6 +241,16 @@ app.get('/metrics', async (req, res) => {
       message: 'Failed to retrieve metrics'
     });
   }
+});
+
+// Serve React app for all non-API routes (must be after all API routes)
+app.use((req, res, next) => {
+  // Skip if it's an API route
+  if (req.path.startsWith('/api') || req.path.startsWith('/health') || req.path.startsWith('/metrics')) {
+    return next();
+  }
+  // Serve React app for all other routes
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
 // 404 handler

@@ -168,6 +168,66 @@ class ReservationController {
       });
     }
   }
+
+  /**
+   * Get available rooms for guests (public endpoint)
+   */
+  async getAvailableBookings(req, res) {
+    try {
+      const filters = {
+        startDate: req.query.startDate,
+        endDate: req.query.endDate,
+        roomId: req.query.roomId,
+        roomTypeId: req.query.roomTypeId
+      };
+      
+      const pagination = {
+        page: parseInt(req.query.page) || 1,
+        limit: parseInt(req.query.limit) || 20
+      };
+
+      const result = await reservationService.getAvailableBookings(filters, pagination);
+      
+      res.status(200).json({
+        success: true,
+        data: result.roomTypes,
+        searchDates: result.searchDates,
+        meta: result.meta
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * Create guest reservation (public endpoint)
+   */
+  async createGuestReservation(req, res) {
+    try {
+      const reservationData = {
+        ...req.body,
+        // No staffId for guest reservations - will be set to null or system user
+        status: 'pending', // Guest reservations start as pending
+        source: 'guest' // Mark as guest-created
+      };
+      
+      const reservation = await reservationService.createGuestReservation(reservationData);
+      
+      res.status(201).json({
+        success: true,
+        message: 'Reservation request submitted successfully. You will receive a confirmation email once approved.',
+        data: reservation
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
 }
 
 export default new ReservationController();
