@@ -1,0 +1,17 @@
+# cPanel Node.js Application Configuration
+# Memory and performance optimizations
+
+# Set Node.js memory limits
+SetEnv NODE_OPTIONS "--max-old-space-size=512 --optimize-for-size --max-semi-space-size=64 --no-liftoff"
+
+# Reduce thread pool size
+SetEnv UV_THREADPOOL_SIZE "4"
+
+# Production environment
+SetEnv NODE_ENV "production"
+
+# Disable unnecessary features for memory savings
+SetEnv NODE_NO_WARNINGS "1"
+
+# Application startup
+Action application/x-httpd-node "/usr/local/cpanel/3rdparty/bin/node cpanel-start.js"

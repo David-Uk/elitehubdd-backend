@@ -1,4 +1,5 @@
 import db from '../models/index.js';
+import emailService from './emailService.js';
 
 const { Reservation, Guest, Room, RoomType, Staff } = db;
 
@@ -773,6 +774,14 @@ class ReservationService {
         email: 'reservations@elitehubhotel.com'
       }
     };
+
+    // Send email notification to info@elitehubbydd.com
+    try {
+      await emailService.sendGuestReservationEmail(responseData.printableConfirmation);
+    } catch (emailError) {
+      // Log email error but don't fail the reservation
+      console.error('Failed to send guest reservation email:', emailError);
+    }
 
     return responseData;
   }

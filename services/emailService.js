@@ -137,6 +137,125 @@ If you did not request this, please ignore this email and your password will rem
     }
   }
 
+  async sendGuestReservationEmail(reservationData) {
+    const {
+      reservationNumber,
+      guestName,
+      guestEmail,
+      guestPhone,
+      roomNumber,
+      roomType,
+      checkInDate,
+      checkOutDate,
+      numberOfGuests,
+      totalAmount,
+      currency,
+      status,
+      specialRequests,
+      bookingDate
+    } = reservationData;
+
+    const subject = `New Guest Reservation: ${reservationNumber} - ${guestName}`;
+    
+    const message = `
+New Guest Reservation Details:
+
+Reservation Number: ${reservationNumber}
+Guest Name: ${guestName}
+Guest Email: ${guestEmail}
+Guest Phone: ${guestPhone}
+Room Number: ${roomNumber}
+Room Type: ${roomType}
+Check-in Date: ${new Date(checkInDate).toLocaleString()}
+Check-out Date: ${new Date(checkOutDate).toLocaleString()}
+Number of Guests: ${numberOfGuests}
+Total Amount: ${currency} ${totalAmount}
+Status: ${status}
+Special Requests: ${specialRequests || 'None'}
+Booking Date: ${new Date(bookingDate).toLocaleString()}
+
+This reservation requires staff approval.
+    `.trim();
+
+    const htmlMessage = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #333;">New Guest Reservation</h2>
+        <div style="background-color: #f5f5f5; padding: 20px; border-radius: 5px;">
+          <h3 style="color: #007bff; margin-top: 0;">Reservation Information</h3>
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd; font-weight: bold;">Reservation Number:</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${reservationNumber}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd; font-weight: bold;">Guest Name:</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${guestName}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd; font-weight: bold;">Guest Email:</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${guestEmail}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd; font-weight: bold;">Guest Phone:</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${guestPhone}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd; font-weight: bold;">Room Number:</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${roomNumber}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd; font-weight: bold;">Room Type:</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${roomType}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd; font-weight: bold;">Check-in Date:</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${new Date(checkInDate).toLocaleString()}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd; font-weight: bold;">Check-out Date:</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${new Date(checkOutDate).toLocaleString()}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd; font-weight: bold;">Number of Guests:</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${numberOfGuests}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd; font-weight: bold;">Total Amount:</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${currency} ${totalAmount}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd; font-weight: bold;">Status:</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;"><span style="color: #ff9800;">${status.toUpperCase()}</span></td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd; font-weight: bold;">Special Requests:</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${specialRequests || 'None'}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd; font-weight: bold;">Booking Date:</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${new Date(bookingDate).toLocaleString()}</td>
+            </tr>
+          </table>
+        </div>
+        <div style="margin-top: 20px; padding: 15px; background-color: #fff3cd; border-radius: 5px; border-left: 4px solid #ffc107;">
+          <p style="margin: 0; color: #856404;"><strong>Note:</strong> This reservation requires staff approval.</p>
+        </div>
+      </div>
+    `;
+
+    try {
+      return await this.sendEmail({
+        to: 'info@elitehubbydd.com',
+        subject,
+        text: message,
+        html: htmlMessage,
+      });
+    } catch (error) {
+      logger.error(`Failed to send guest reservation email for ${reservationNumber}:`, error.message);
+      throw error;
+    }
+  }
+
   /**
    * Get email service status
    */
