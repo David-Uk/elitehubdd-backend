@@ -76,7 +76,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Data sanitization removed
-app.use(activityLogger);
+
 
 // HTTP request logging with Morgan and Winston
 // Morgan logs all API requests with timestamp, method, URL, status, and response time

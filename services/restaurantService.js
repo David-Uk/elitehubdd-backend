@@ -1266,6 +1266,124 @@ async cancelBatch(batchId, reason) {
   }
 
   /**
+   * Update order item details (quantity, special instructions)
+   */
+  async updateOrderItem(itemId, updates) {
+    const item = await RestaurantOrderItem.findByPk(itemId);
+    if (!item) {
+      throw new Error('Order item not found');
+    }
+
+    const { quantity, specialInstructions } = updates;
+    const updateData = {};
+    let recalculate = false;
+
+    if (quantity !== undefined) {
+      updateData.quantity = quantity;
+      updateData.totalPrice = quantity * item.unitPrice;
+      recalculate = true;
+    }
+
+    if (specialInstructions !== undefined) {
+      updateData.specialInstructions = specialInstructions;
+    }
+
+    await item.update(updateData);
+
+    if (recalculate) {
+      await this.updateOrderTotals(item.orderId);
+      // Also need to update batch totals if belongs to one
+      const order = await RestaurantOrder.findByPk(item.orderId);
+      if (order && order.batchId) {
+        await this.recalculateBatchTotals(order.batchId);
+      }
+    }
+
+    return item;
+  }
+
+  /**
+   * Update order item status and propagate completion
+   */
+  async updateOrderItemStatus(itemId, status) {
+    const item = await RestaurantOrderItem.findByPk(itemId);
+    if (!item) {
+      throw new Error('Order item not found');
+    }
+
+    await item.update({ status });
+
+    // Check if we need to update order status
+    if (['completed', 'served', 'cancelled'].includes(status)) {
+      await this.checkOrderCompletion(item.orderId);
+    }
+
+    // Only return the item with fresh data if needed, or just the item
+    return item;
+  }
+
+  /**
+   * Check if order is complete based on its items
+   */
+  async checkOrderCompletion(orderId) {
+    const order = await RestaurantOrder.findByPk(orderId, {
+      include: [{ model: RestaurantOrderItem, as: 'items' }]
+    });
+
+    if (!order) return;
+
+    // Filter out cancelled items from completion check, or assume they don't block
+    const validItems = order.items.filter(i => i.status !== 'cancelled');
+    
+    if (validItems.length === 0) {
+        // All items cancelled? cancel order or mark completed?
+        // If all items are cancelled, order should probably be cancelled.
+        const allCancelled = order.items.length > 0 && order.items.every(i => i.status === 'cancelled');
+        if (allCancelled && order.status !== 'cancelled') {
+             await order.update({ status: 'cancelled' });
+        }
+        return;
+    }
+
+    // Check if all valid items are completed or served
+    const allComplete = validItems.every(i => ['completed', 'served'].includes(i.status));
+
+    if (allComplete && !['completed', 'served', 'cancelled'].includes(order.status)) {
+       // Mark order as completed
+       await order.update({ status: 'completed' });
+       
+       // If order is part of a batch, check batch completion
+       if (order.batchId) {
+         await this.checkBatchCompletion(order.batchId);
+       }
+    }
+  }
+
+  /**
+   * Check if batch is complete based on its orders
+   */
+  async checkBatchCompletion(batchId) {
+    const batch = await OrderBatch.findByPk(batchId, {
+      include: [{ model: RestaurantOrder, as: 'orders' }]
+    });
+
+    if (!batch) return;
+
+    const validOrders = batch.orders.filter(o => o.status !== 'cancelled');
+    
+    if (validOrders.length === 0) return;
+
+    const allComplete = validOrders.every(o => ['completed', 'served', 'paid'].includes(o.status));
+
+    if (allComplete && !['completed', 'cancelled'].includes(batch.status)) {
+      await batch.update({ 
+        status: 'completed',
+        completedAt: new Date()
+      });
+    }
+  }
+
+  /**
    * Delete all restaurant orders and related data
    */
   async deleteAllOrders() {

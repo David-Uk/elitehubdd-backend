@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "cross-env NODE_OPTIONS=\"--max-old-space-size=512 --optimize-for-size --max-semi-space-size=64 --no-liftoff\" NODE_ENV=test DB_SSL=true node server.js",
+    "start": "cross-env NODE_ENV=test DB_SSL=true node server.js",
     "start:test": "cross-env NODE_OPTIONS=\"--max-old-space-size=512 --optimize-for-size --max-semi-space-size=64 --no-liftoff\" NODE_ENV=test DB_SSL=true node server.js",
     "start:prod": "cross-env NODE_OPTIONS=\"--max-old-space-size=512 --optimize-for-size --max-semi-space-size=64 --no-liftoff\" NODE_ENV=production node server.js",
     "dev:test": "cross-env NODE_ENV=test DB_SSL=true node --watch server.js",

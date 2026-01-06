@@ -426,6 +426,44 @@ class RestaurantController {
       });
     }
   }
+  /**
+   * Update order item details
+   */
+  async updateOrderItem(req, res) {
+    try {
+      const item = await restaurantService.updateOrderItem(req.params.itemId, req.body);
+      res.status(200).json({
+        success: true,
+        message: 'Order item updated successfully',
+        data: item
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * Update order item status
+   */
+  async updateOrderItemStatus(req, res) {
+    try {
+      const { status } = req.body;
+      const item = await restaurantService.updateOrderItemStatus(req.params.itemId, status);
+      res.status(200).json({
+        success: true,
+        message: 'Order item status updated successfully',
+        data: item
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
 }
 
 export default new RestaurantController();

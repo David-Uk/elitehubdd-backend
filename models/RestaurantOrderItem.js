@@ -51,6 +51,11 @@ export default (sequelize, DataTypes) => {
     specialInstructions: {
       type: DataTypes.TEXT,
       field: 'special_instructions'
+    },
+    status: {
+      type: DataTypes.ENUM('pending', 'preparing', 'ready', 'served', 'completed', 'cancelled'),
+      defaultValue: 'pending',
+      allowNull: false
     }
   }, {
     sequelize,

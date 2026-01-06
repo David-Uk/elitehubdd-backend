@@ -139,4 +139,17 @@ router.patch('/batches/:id/edit',
   restaurantController.editBatchOrder
 );
 
+// Order Status & Item Updates
+router.patch('/order-items/:itemId',
+  authorize('super_admin', 'admin', 'supervisor', 'kitchen_staff', 'waiter'),
+  invalidateCache(['/api/restaurant/orders*', '/api/restaurant/batches*', '/api/reports*']),
+  restaurantController.updateOrderItem
+);
+
+router.patch('/order-items/:itemId/status',
+  authorize('super_admin', 'admin', 'supervisor', 'kitchen_staff', 'waiter'),
+  invalidateCache(['/api/restaurant/orders*', '/api/restaurant/batches*', '/api/reports*']),
+  restaurantController.updateOrderItemStatus
+);
+
 export default router;

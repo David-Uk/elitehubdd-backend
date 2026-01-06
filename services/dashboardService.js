@@ -18,329 +18,42 @@ class DashboardService {
   /**
    * Get comprehensive dashboard statistics
    */
+  /**
+   * Get comprehensive dashboard statistics
+   */
   async getDashboardStats() {
     try {
-      const now = new Date();
-      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const startOfWeek = new Date(new Date().setDate(now.getDate() - now.getDay()));
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-      const startOfYear = new Date(now.getFullYear(), 0, 1);
-
-      // Correctly calculate total and today's orders
-      const totalOrdersPromise = Promise.all([
-        BarOrder.count(),
-        RestaurantOrder.count(),
-      ]).then(counts => counts.reduce((a, b) => a + b, 0));
-
-      const todayOrdersPromise = Promise.all([
-        BarOrder.count({
-          where: { created_at: { [db.Sequelize.Op.gte]: startOfDay } },
-        }),
-        RestaurantOrder.count({
-          where: { created_at: { [db.Sequelize.Op.gte]: startOfDay } },
-        }),
-      ]).then(counts => counts.reduce((a, b) => a + b, 0));
-
-      // Parallel data fetching for better performance
       const [
-        totalReservations,
-        todayReservations,
-        weeklyReservations,
-        monthlyReservations,
-        yearlyReservations,
-        totalRooms,
-        availableRooms,
-        occupiedRooms,
-        totalGuests,
-        todayCheckIns,
-        pendingCheckIns,
-        totalStaff,
-        activeStaff,
-        totalMenuItems,
-        totalOrders,
-        todayOrders,
-        totalInventoryItems,
-        lowStockItems,
-        unreadNotifications,
-        recentReservations,
-        revenueData,
-        occupancyData,
-        reservationsByRoomType,
+        overview,
+        today,
+        periods,
+        revenue,
+        inventory,
+        orders,
+        notifications,
+        recentActivity
       ] = await Promise.all([
-        // Reservation stats
-        Reservation.count(),
-        Reservation.count({
-          where: {
-            created_at: {
-              [db.Sequelize.Op.gte]: startOfDay,
-            },
-          },
-        }),
-        Reservation.count({
-          where: {
-            created_at: {
-              [db.Sequelize.Op.gte]: startOfWeek,
-            },
-          },
-        }),
-        Reservation.count({
-          where: {
-            created_at: {
-              [db.Sequelize.Op.gte]: startOfMonth,
-            },
-          },
-        }),
-        Reservation.count({
-          where: {
-            created_at: {
-              [db.Sequelize.Op.gte]: startOfYear,
-            },
-          },
-        }),
-
-        // Room stats
-        Room.count(),
-        Room.count({ where: { status: 'available' } }),
-        Room.count({ where: { status: 'occupied' } }),
-
-        // Guest stats
-        Guest.count(),
-
-        // Check-in stats
-        Reservation.count({
-          where: {
-            checkInDate: {
-              [db.Sequelize.Op.between]: [startOfDay, new Date()],
-            },
-          },
-        }),
-        Reservation.count({
-          where: {
-            checkInDate: {
-              [db.Sequelize.Op.lt]: startOfDay,
-            },
-            status: 'pending',
-          },
-        }),
-
-        // Staff stats
-        Staff.count(),
-        Staff.count({ where: { status: 'active' } }),
-
-        // Menu items
-        MenuItem.count(),
-
-        // Orders
-        totalOrdersPromise,
-        todayOrdersPromise,
-
-        // Inventory
-        InventoryItem.count(),
-        InventoryStock.count({
-          include: [
-            {
-              model: InventoryItem,
-              as: 'item',
-              required: true,
-              attributes: [],
-            },
-          ],
-          where: db.Sequelize.where(
-            db.Sequelize.col('item.reorder_level'),
-            '>=',
-            db.Sequelize.col('available_quantity')
-          ),
-          distinct: true,
-        }),
-
-        // Notifications
-        Notification.count({
-          where: { read: false },
-        }),
-
-        // Recent reservations (last 7 days)
-        Reservation.findAll({
-          limit: 10,
-          order: [['created_at', 'DESC']],
-          include: [
-            { model: Guest, as: 'guest', attributes: ['firstName', 'lastName', 'email'] },
-            {
-              model: Room,
-              as: 'room',
-              attributes: ['roomNumber'],
-              include: [
-                {
-                  model: RoomType,
-                  as: 'roomType',
-                  attributes: ['name', 'basePrice'],
-                },
-              ],
-            },
-            {
-                model: Staff,
-                as: 'staff',
-                attributes: ['firstName', 'lastName'],
-            }
-          ],
-        }),
-
-        // Revenue data (confirmed reservations)
-        Reservation.findAll({
-          where: {
-            status: ['confirmed', 'checked_in', 'checked_out'],
-            created_at: {
-              [db.Sequelize.Op.gte]: startOfMonth,
-            },
-          },
-          include: [
-            {
-              model: Room,
-              as: 'room',
-              include: [
-                {
-                  model: RoomType,
-                  as: 'roomType',
-                  attributes: ['basePrice'],
-                },
-              ],
-            },
-          ],
-        }),
-
-        // Occupancy data for last 30 days
-        Reservation.findAll({
-          where: {
-            created_at: {
-              [db.Sequelize.Op.gte]: new Date(new Date().setDate(now.getDate() - 30)),
-            },
-          },
-          attributes: [
-            [db.Sequelize.fn('DATE', db.Sequelize.col('created_at')), 'date'],
-            [db.Sequelize.fn('COUNT', db.Sequelize.col('id')), 'count'],
-          ],
-          group: [db.Sequelize.fn('DATE', db.Sequelize.col('created_at'))],
-          order: [[db.Sequelize.fn('DATE', db.Sequelize.col('created_at')), 'ASC']],
-        }),
-        
-        // Reservations by room type
-        RoomType.findAll({
-            attributes: [
-              'name',
-              [db.Sequelize.fn('COUNT', db.Sequelize.col('rooms.reservations.id')), 'reservationCount']
-            ],
-            include: [{
-              model: Room,
-              as: 'rooms',
-              attributes: [],
-              include: [{
-                model: Reservation,
-                as: 'reservations',
-                attributes: []
-              }]
-            }],
-            group: ['RoomType.id', 'RoomType.name'],
-            order: [[db.Sequelize.literal('"reservationCount"'), 'DESC']]
-        })
+        this.getOverviewStats(),
+        this.getTodayStats(),
+        this.getPeriodStats(),
+        this.getRevenueData(),
+        this.getInventoryStats(),
+        this.getOrderStats(),
+        this.getNotificationStats(),
+        this.getRecentActivity()
       ]);
-
-      // Calculate revenue
-      const monthlyRevenue = revenueData.reduce((total, reservation) => {
-        return total + (reservation.room?.roomType?.basePrice || 0);
-      }, 0);
-
-      // Calculate occupancy rate
-      const occupancyRate = totalRooms > 0 ? Math.round((occupiedRooms / totalRooms) * 100) : 0;
-
-      // Format occupancy data
-      const occupancyTrend = occupancyData.map(item => ({
-        date: item.dataValues.date,
-        reservations: parseInt(item.dataValues.count, 10),
-      }));
-
-      // Format recent reservations
-      const formattedRecentReservations = recentReservations.map(reservation => ({
-        id: reservation.id,
-        guestName: `${reservation.guest?.firstName || ''} ${reservation.guest?.lastName || ''}`.trim(),
-        roomNumber: reservation.room?.roomNumber,
-        roomType: reservation.room?.roomType?.name || null,
-        checkInDate: reservation.checkInDate,
-        checkOutDate: reservation.checkOutDate,
-        status: reservation.status,
-        totalAmount: reservation.totalAmount,
-        paidAmount: reservation.paidAmount,
-        numberOfGuests: reservation.numberOfGuests,
-        staffName: `${reservation.staff?.firstName || ''} ${reservation.staff?.lastName || ''}`.trim(),
-        createdAt: reservation.created_at,
-      }));
-      
-      // Format reservations by room type
-      const formattedReservationsByRoomType = reservationsByRoomType.map(item => ({
-          name: item.name,
-          count: parseInt(item.get('reservationCount'), 10)
-      }));
 
       return {
         success: true,
         data: {
-          // Overview Stats
-          overview: {
-            totalReservations,
-            totalRooms,
-            availableRooms,
-            occupiedRooms,
-            occupancyRate,
-            totalGuests,
-            totalStaff,
-            activeStaff,
-            reservationsByRoomType: formattedReservationsByRoomType,
-          },
-
-          // Today's Stats
-          today: {
-            reservations: todayReservations,
-            checkIns: todayCheckIns,
-            pendingCheckIns,
-            orders: todayOrders,
-            date: new Date().toISOString(),
-          },
-
-          // Time Period Stats
-          periods: {
-            weekly: weeklyReservations,
-            monthly: monthlyReservations,
-            yearly: yearlyReservations,
-          },
-
-          // Revenue Stats
-          revenue: {
-            monthly: monthlyRevenue,
-            currency: 'NGN',
-            trend: occupancyTrend,
-          },
-
-          // Inventory Stats
-          inventory: {
-            totalItems: totalInventoryItems,
-            lowStockItems,
-            totalMenuItems,
-          },
-
-          // Orders Stats
-          orders: {
-            total: totalOrders,
-            today: todayOrders,
-          },
-
-          // Notifications
-          notifications: {
-            unread: unreadNotifications,
-            total: await Notification.count(),
-          },
-
-          // Recent Activity
-          recentActivity: {
-            reservations: formattedRecentReservations,
-          },
+          overview,
+          today,
+          periods,
+          revenue,
+          inventory,
+          orders,
+          notifications,
+          recentActivity
         },
         meta: {
           generatedAt: new Date().toISOString(),
@@ -356,6 +69,240 @@ class DashboardService {
         error: error.message,
       };
     }
+  }
+
+  // --- Helper Methods for Modular/Streaming Access ---
+
+  async getOverviewStats() {
+    const [
+      totalReservations,
+      totalRooms,
+      availableRooms,
+      occupiedRooms,
+      totalGuests,
+      totalStaff,
+      activeStaff,
+      reservationsByRoomType
+    ] = await Promise.all([
+      Reservation.count(),
+      Room.count(),
+      Room.count({ where: { status: 'available' } }),
+      Room.count({ where: { status: 'occupied' } }),
+      Guest.count(),
+      Staff.count(),
+      Staff.count({ where: { status: 'active' } }),
+      RoomType.findAll({
+        attributes: [
+          'name',
+          [db.Sequelize.fn('COUNT', db.Sequelize.col('rooms.reservations.id')), 'reservationCount']
+        ],
+        include: [{
+          model: Room,
+          as: 'rooms',
+          attributes: [],
+          include: [{
+            model: Reservation,
+            as: 'reservations',
+            attributes: []
+          }]
+        }],
+        group: ['RoomType.id', 'RoomType.name'],
+        order: [[db.Sequelize.literal('"reservationCount"'), 'DESC']]
+      })
+    ]);
+
+    const occupancyRate = totalRooms > 0 ? Math.round((occupiedRooms / totalRooms) * 100) : 0;
+    
+    return {
+      totalReservations,
+      totalRooms,
+      availableRooms,
+      occupiedRooms,
+      occupancyRate,
+      totalGuests,
+      totalStaff,
+      activeStaff,
+      reservationsByRoomType: reservationsByRoomType.map(item => ({
+        name: item.name,
+        count: parseInt(item.get('reservationCount'), 10)
+      }))
+    };
+  }
+
+  async getTodayStats() {
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const [
+      reservations,
+      checkIns,
+      pendingCheckIns,
+      barOrders,
+      restaurantOrders
+    ] = await Promise.all([
+      Reservation.count({
+        where: { created_at: { [db.Sequelize.Op.gte]: startOfDay } },
+      }),
+      Reservation.count({
+        where: {
+          checkInDate: { [db.Sequelize.Op.between]: [startOfDay, new Date()] },
+        },
+      }),
+      Reservation.count({
+        where: {
+          checkInDate: { [db.Sequelize.Op.lt]: startOfDay },
+          status: 'pending',
+        },
+      }),
+      BarOrder.count({
+        where: { created_at: { [db.Sequelize.Op.gte]: startOfDay } },
+      }),
+      RestaurantOrder.count({
+        where: { created_at: { [db.Sequelize.Op.gte]: startOfDay } },
+      })
+    ]);
+
+    return {
+      reservations,
+      checkIns,
+      pendingCheckIns,
+      orders: barOrders + restaurantOrders,
+      date: new Date().toISOString(),
+    };
+  }
+
+  async getPeriodStats() {
+    const now = new Date();
+    const startOfWeek = new Date(new Date().setDate(now.getDate() - now.getDay()));
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+
+    const [weekly, monthly, yearly] = await Promise.all([
+      Reservation.count({ created_at: { [db.Sequelize.Op.gte]: startOfWeek } }),
+      Reservation.count({ created_at: { [db.Sequelize.Op.gte]: startOfMonth } }),
+      Reservation.count({ created_at: { [db.Sequelize.Op.gte]: startOfYear } })
+    ]);
+
+    return { weekly, monthly, yearly };
+  }
+
+  async getRevenueData() {
+     const now = new Date();
+     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+     const monthlyRevenue = await Reservation.sum('totalAmount', {
+        where: {
+          status: ['confirmed', 'checked_in', 'checked_out'],
+          created_at: { [db.Sequelize.Op.gte]: startOfMonth },
+        },
+      });
+
+      // Occupancy Trend (Last 30 days)
+      const occupancyData = await Reservation.findAll({
+        where: {
+          created_at: {
+            [db.Sequelize.Op.gte]: new Date(new Date().setDate(now.getDate() - 30)),
+          },
+        },
+        attributes: [
+          [db.Sequelize.fn('DATE', db.Sequelize.col('created_at')), 'date'],
+          [db.Sequelize.fn('COUNT', db.Sequelize.col('id')), 'count'],
+        ],
+        group: [db.Sequelize.fn('DATE', db.Sequelize.col('created_at'))],
+        order: [[db.Sequelize.fn('DATE', db.Sequelize.col('created_at')), 'ASC']],
+      });
+
+      return {
+        monthly: parseFloat(monthlyRevenue || 0),
+        currency: 'NGN',
+        trend: occupancyData.map(item => ({
+          date: item.dataValues.date,
+          reservations: parseInt(item.dataValues.count, 10),
+          revenue: 0 // Placeholder as mapping revenue per day is complex with grouping
+        })),
+      };
+  }
+
+  async getInventoryStats() {
+    const [totalItems, totalMenuItems, lowStockItems] = await Promise.all([
+      InventoryItem.count(),
+      MenuItem.count(),
+      InventoryStock.count({
+        include: [{
+          model: InventoryItem,
+          as: 'item',
+          required: true,
+          attributes: [],
+        }],
+        where: db.Sequelize.where(
+          db.Sequelize.col('item.reorder_level'),
+          '>=',
+          db.Sequelize.col('available_quantity')
+        ),
+        distinct: true,
+      })
+    ]);
+
+    return { totalItems, lowStockItems, totalMenuItems };
+  }
+
+  async getOrderStats() {
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const [totalBar, totalRest, todayBar, todayRest] = await Promise.all([
+      BarOrder.count(),
+      RestaurantOrder.count(),
+      BarOrder.count({ where: { created_at: { [db.Sequelize.Op.gte]: startOfDay } } }),
+      RestaurantOrder.count({ where: { created_at: { [db.Sequelize.Op.gte]: startOfDay } } })
+    ]);
+
+    return {
+      total: totalBar + totalRest,
+      today: todayBar + todayRest
+    };
+  }
+
+  async getNotificationStats() {
+    const [unread, total] = await Promise.all([
+      Notification.count({ where: { read: false } }),
+      Notification.count()
+    ]);
+    return { unread, total };
+  }
+
+  async getRecentActivity() {
+    const recentReservations = await Reservation.findAll({
+      limit: 10,
+      order: [['created_at', 'DESC']],
+      include: [
+        { model: Guest, as: 'guest', attributes: ['firstName', 'lastName', 'email'] },
+        {
+          model: Room,
+          as: 'room',
+          attributes: ['roomNumber'],
+          include: [{ model: RoomType, as: 'roomType', attributes: ['name', 'basePrice'] }],
+        },
+        { model: Staff, as: 'staff', attributes: ['firstName', 'lastName'] }
+      ],
+    });
+
+    return {
+      reservations: recentReservations.map(reservation => ({
+        id: reservation.id,
+        guestName: `${reservation.guest?.firstName || ''} ${reservation.guest?.lastName || ''}`.trim(),
+        roomNumber: reservation.room?.roomNumber,
+        roomType: reservation.room?.roomType?.name || null,
+        checkInDate: reservation.checkInDate,
+        checkOutDate: reservation.checkOutDate,
+        status: reservation.status,
+        totalAmount: reservation.totalAmount,
+        paidAmount: reservation.paidAmount,
+        numberOfGuests: reservation.numberOfGuests,
+        staffName: `${reservation.staff?.firstName || ''} ${reservation.staff?.lastName || ''}`.trim(),
+        createdAt: reservation.created_at,
+      }))
+    };
   }
 
   /**
@@ -421,37 +368,20 @@ class DashboardService {
           startDate = new Date(now.getFullYear(), now.getMonth(), 1);
       }
 
-      const revenueData = await Reservation.findAll({
+      const revenue = await Reservation.sum('totalAmount', {
         where: {
           status: ['confirmed', 'checked_in', 'checked_out'],
           created_at: {
             [db.Sequelize.Op.gte]: startDate,
           },
         },
-        include: [
-          {
-            model: Room,
-            as: 'room',
-            include: [
-              {
-                model: RoomType,
-                as: 'roomType',
-                attributes: ['basePrice'],
-              },
-            ],
-          },
-        ],
       });
-
-      const revenue = revenueData.reduce((total, reservation) => {
-        return total + (reservation.room?.roomType?.basePrice || 0);
-      }, 0);
 
       return {
         success: true,
         data: {
           period,
-          revenue,
+          revenue: parseFloat(revenue || 0),
           currency: 'NGN',
           startDate: startDate.toISOString(),
           endDate: new Date().toISOString(),
