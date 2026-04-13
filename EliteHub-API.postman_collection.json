@@ -1,0 +1,3468 @@
+{
+    "info": {
+        "_postman_id": "elitehub-api-collection",
+        "name": "Elite Hub by Double D — API",
+        "description": "Complete REST API collection for the Elite Hub hotel management system.\n\n**Base URL:** `{{baseUrl}}`\n\n**Authentication:** Most endpoints require a Bearer token. Set the `token` variable after logging in via `POST /auth/login`.\n\n**Variables to configure:**\n- `baseUrl` — e.g. `http://localhost:3000/api`\n- `token` — JWT token from login response",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:3000/api",
+            "type": "string"
+        },
+        {
+            "key": "token",
+            "value": "",
+            "type": "string"
+        }
+    ],
+    "auth": {
+        "type": "bearer",
+        "bearer": [
+            {
+                "key": "token",
+                "value": "{{token}}",
+                "type": "string"
+            }
+        ]
+    },
+    "item": [
+        {
+            "name": "Auth",
+            "description": "Authentication and user account management",
+            "item": [
+                {
+                    "name": "Login",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/login",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "login"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"admin@elitehub.com\",\n  \"password\": \"Admin@1234\"\n}"
+                        },
+                        "description": "Authenticate a staff member. Returns a JWT token. Copy the token value into the `token` collection variable."
+                    }
+                },
+                {
+                    "name": "Register Super Admin",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/register-super-admin",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "register-super-admin"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"superadmin@elitehub.com\",\n  \"password\": \"SuperAdmin@1234\",\n  \"gender\": \"male\",\n  \"username\": \"superadmin\",\n  \"phoneNumber\": \"+2348012345678\",\n  \"position\": \"Managing Director\"\n}"
+                        },
+                        "description": "One-time setup endpoint to create the Super Admin account. No authentication required."
+                    }
+                },
+                {
+                    "name": "Register Admin",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/register-admin",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "register-admin"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Smith\",\n  \"email\": \"admin2@elitehub.com\",\n  \"password\": \"Admin@1234\",\n  \"gender\": \"female\",\n  \"username\": \"janesmith\",\n  \"phoneNumber\": \"+2348098765432\",\n  \"position\": \"Hotel Manager\"\n}"
+                        },
+                        "description": "Register a new admin. Requires super_admin authentication. Limited to 4 admins total."
+                    }
+                },
+                {
+                    "name": "Register Staff",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/register",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "register"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"firstName\": \"Michael\",\n  \"lastName\": \"Johnson\",\n  \"email\": \"receptionist@elitehub.com\",\n  \"password\": \"Staff@1234\",\n  \"gender\": \"male\",\n  \"username\": \"mjohnson\",\n  \"phoneNumber\": \"+2348011223344\",\n  \"role\": \"receptionist\",\n  \"department\": \"reception\",\n  \"position\": \"Front Desk Officer\",\n  \"status\": \"active\",\n  \"hireDate\": \"2024-01-15\"\n}"
+                        },
+                        "description": "Register a new staff member. Requires admin or super_admin authentication.\n\nValid roles: `super_admin`, `admin`, `accountant`, `supervisor`, `manager`, `receptionist`, `housekeeping`, `restaurant_staff`, `bar_staff`, `waiter`, `kitchen_staff`, `maintenance`\n\nValid departments: `reception`, `housekeeping`, `maintenance`, `management`, `restaurant`"
+                    }
+                },
+                {
+                    "name": "Get Profile",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/profile",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "profile"
+                            ]
+                        },
+                        "description": "Get the authenticated staff member's profile."
+                    }
+                },
+                {
+                    "name": "Change Password",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/change-password",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "change-password"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"oldPassword\": \"Admin@1234\",\n  \"newPassword\": \"NewAdmin@5678\"\n}"
+                        },
+                        "description": "Change the authenticated user's password. New password must differ from old and meet complexity requirements."
+                    }
+                },
+                {
+                    "name": "Forgot Password",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/forgot-password",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "forgot-password"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"admin@elitehub.com\"\n}"
+                        },
+                        "description": "Request a password reset email. A reset link will be sent to the provided email address."
+                    }
+                },
+                {
+                    "name": "Reset Password",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/reset-password/:token",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "reset-password",
+                                ":token"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "token",
+                                    "value": "your-reset-token-here"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"password\": \"NewPassword@1234\"\n}"
+                        },
+                        "description": "Reset password using the token received via email."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Reservations",
+            "description": "Room reservation management. Public endpoints for guests, protected endpoints for staff.",
+            "item": [
+                {
+                    "name": "Check Room Availability (Public)",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/reservations/availability/check?checkInDate=2026-05-01&checkOutDate=2026-05-05",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "reservations",
+                                "availability",
+                                "check"
+                            ],
+                            "query": [
+                                {
+                                    "key": "checkInDate",
+                                    "value": "2026-05-01"
+                                },
+                                {
+                                    "key": "checkOutDate",
+                                    "value": "2026-05-05"
+                                }
+                            ]
+                        },
+                        "description": "Check which rooms are available for a given date range. No authentication required."
+                    }
+                },
+                {
+                    "name": "Get Available Bookings (Public)",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/reservations/available?startDate=2026-05-01&endDate=2026-05-05&page=1&limit=20",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "reservations",
+                                "available"
+                            ],
+                            "query": [
+                                {
+                                    "key": "startDate",
+                                    "value": "2026-05-01"
+                                },
+                                {
+                                    "key": "endDate",
+                                    "value": "2026-05-05"
+                                },
+                                {
+                                    "key": "roomTypeId",
+                                    "value": "",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "roomId",
+                                    "value": "",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "20"
+                                }
+                            ]
+                        },
+                        "description": "View available rooms grouped by room type. Designed for the public-facing booking page. No authentication required."
+                    }
+                },
+                {
+                    "name": "Create Guest Reservation (Public)",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/reservations/guest",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "reservations",
+                                "guest"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"guestFirstName\": \"Alice\",\n  \"guestLastName\": \"Williams\",\n  \"guestEmail\": \"alice@example.com\",\n  \"guestPhone\": \"+2348055667788\",\n  \"roomTypeId\": \"uuid-of-room-type\",\n  \"checkInDate\": \"2026-05-10\",\n  \"checkOutDate\": \"2026-05-14\",\n  \"numberOfGuests\": 2,\n  \"specialRequests\": \"Late check-in, non-smoking room preferred\"\n}"
+                        },
+                        "description": "Submit a reservation request as a guest. No authentication required. Reservation starts with `pending` status and requires staff approval."
+                    }
+                },
+                {
+                    "name": "Create Reservation (Staff)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/reservations",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "reservations"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"guestId\": \"uuid-of-existing-guest\",\n  \"roomId\": \"uuid-or-room-number\",\n  \"checkInDate\": \"2026-05-10\",\n  \"checkOutDate\": \"2026-05-14\",\n  \"numberOfGuests\": 2,\n  \"specialRequests\": \"Extra pillows\"\n}"
+                        },
+                        "description": "Create a reservation for an existing guest. Alternatively, pass a `guest` object instead of `guestId` to create a new guest inline.\n\nRoles: `super_admin`, `admin`, `accountant`, `supervisor`, `manager`, `receptionist`\n\n**With new guest inline:**\n```json\n{\n  \"guest\": {\n    \"firstName\": \"Bob\",\n    \"lastName\": \"Brown\",\n    \"email\": \"bob@example.com\",\n    \"phone\": \"+2348011223344\",\n    \"address\": \"12 Main Street\",\n    \"city\": \"Benin City\",\n    \"country\": \"Nigeria\",\n    \"idType\": \"national_id\",\n    \"idNumber\": \"NIN12345678\",\n    \"dateOfBirth\": \"1990-06-15\"\n  },\n  \"roomId\": \"uuid-or-room-number\",\n  \"checkInDate\": \"2026-05-10\",\n  \"checkOutDate\": \"2026-05-14\",\n  \"numberOfGuests\": 1\n}\n```"
+                    }
+                },
+                {
+                    "name": "Get All Reservations",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/reservations?page=1&limit=10",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "reservations"
+                            ],
+                            "query": [
+                                {
+                                    "key": "status",
+                                    "value": "",
+                                    "disabled": true,
+                                    "description": "pending | confirmed | checked_in | checked_out | cancelled"
+                                },
+                                {
+                                    "key": "startDate",
+                                    "value": "",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "endDate",
+                                    "value": "",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "guestId",
+                                    "value": "",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "roomId",
+                                    "value": "",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                }
+                            ]
+                        },
+                        "description": "Retrieve all reservations with optional filters.\n\nRoles: `super_admin`, `admin`, `accountant`, `supervisor`, `manager`, `receptionist`"
+                    }
+                },
+                {
+                    "name": "Get Reservation by ID",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/reservations/:id",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "reservations",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "uuid-here"
+                                }
+                            ]
+                        },
+                        "description": "Get a single reservation by its UUID.\n\nRoles: `super_admin`, `admin`, `accountant`, `supervisor`, `manager`, `receptionist`"
+                    }
+                },
+                {
+                    "name": "Check In",
+                    "request": {
+                        "method": "POST",
+                        "url": {
+                            "raw": "{{baseUrl}}/reservations/:id/check-in",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "reservations",
+                                ":id",
+                                "check-in"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "uuid-here"
+                                }
+                            ]
+                        },
+                        "description": "Mark a guest as checked in.\n\nRoles: `super_admin`, `admin`, `accountant`, `supervisor`, `manager`, `receptionist`"
+                    }
+                },
+                {
+                    "name": "Check Out",
+                    "request": {
+                        "method": "POST",
+                        "url": {
+                            "raw": "{{baseUrl}}/reservations/:id/check-out",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "reservations",
+                                ":id",
+                                "check-out"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "uuid-here"
+                                }
+                            ]
+                        },
+                        "description": "Mark a guest as checked out.\n\nRoles: `super_admin`, `admin`, `accountant`, `supervisor`, `manager`, `receptionist`"
+                    }
+                },
+                {
+                    "name": "Cancel Reservation",
+                    "request": {
+                        "method": "POST",
+                        "url": {
+                            "raw": "{{baseUrl}}/reservations/:id/cancel",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "reservations",
+                                ":id",
+                                "cancel"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "uuid-here"
+                                }
+                            ]
+                        },
+                        "description": "Cancel a reservation.\n\nRoles: `super_admin`, `admin`, `accountant`, `supervisor`, `manager`"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Rooms",
+            "description": "Room management endpoints.",
+            "item": [
+                {
+                    "name": "Get Available Rooms (Public)",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/rooms/available?checkInDate=2026-05-01&checkOutDate=2026-05-05",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "rooms",
+                                "available"
+                            ],
+                            "query": [
+                                {
+                                    "key": "checkInDate",
+                                    "value": "2026-05-01"
+                                },
+                                {
+                                    "key": "checkOutDate",
+                                    "value": "2026-05-05"
+                                }
+                            ]
+                        },
+                        "description": "Get all available rooms for a date range. No authentication required."
+                    }
+                },
+                {
+                    "name": "Create Room",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/rooms",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "rooms"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"roomNumber\": \"101\",\n  \"roomTypeId\": \"uuid-of-room-type\"\n}"
+                        },
+                        "description": "Create a new room. Room number must be unique.\n\nRoles: `super_admin`, `admin`"
+                    }
+                },
+                {
+                    "name": "Get All Rooms",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/rooms?page=1&limit=50",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "rooms"
+                            ],
+                            "query": [
+                                {
+                                    "key": "status",
+                                    "value": "",
+                                    "disabled": true,
+                                    "description": "available | occupied | maintenance"
+                                },
+                                {
+                                    "key": "type",
+                                    "value": "",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "minCapacity",
+                                    "value": "",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "maxCapacity",
+                                    "value": "",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "minPrice",
+                                    "value": "",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "maxPrice",
+                                    "value": "",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "50"
+                                }
+                            ]
+                        },
+                        "description": "Get all rooms with optional filters.\n\nRoles: `super_admin`, `admin`, `accountant`, `supervisor`, `manager`, `receptionist`"
+                    }
+                },
+                {
+                    "name": "Get Room by ID",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/rooms/:id",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "rooms",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "uuid-here"
+                                }
+                            ]
+                        },
+                        "description": "Get a single room by UUID.\n\nRoles: `super_admin`, `admin`, `accountant`, `supervisor`, `manager`, `receptionist`"
+                    }
+                },
+                {
+                    "name": "Get Room by Number",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/rooms/number/:roomNumber",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "rooms",
+                                "number",
+                                ":roomNumber"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "roomNumber",
+                                    "value": "101"
+                                }
+                            ]
+                        },
+                        "description": "Get a room by its room number.\n\nRoles: `super_admin`, `admin`, `accountant`, `supervisor`, `manager`, `receptionist`"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Room Types",
+            "description": "Room type catalogue.",
+            "item": [
+                {
+                    "name": "Get All Room Types",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/room-types",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "room-types"
+                            ]
+                        },
+                        "description": "Get all room types.\n\nRoles: `super_admin`, `admin`, `accountant`, `supervisor`, `manager`, `receptionist`"
+                    }
+                },
+                {
+                    "name": "Get Room Type by ID",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/room-types/:id",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "room-types",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "uuid-here"
+                                }
+                            ]
+                        },
+                        "description": "Get a room type by UUID.\n\nRoles: `super_admin`, `admin`, `accountant`, `supervisor`, `manager`, `receptionist`"
+                    }
+                },
+                {
+                    "name": "Get Room Type by Name",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/room-types/name/:name",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "room-types",
+                                "name",
+                                ":name"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "name",
+                                    "value": "Deluxe Suite"
+                                }
+                            ]
+                        },
+                        "description": "Get a room type by name.\n\nRoles: `super_admin`, `admin`, `accountant`, `supervisor`, `manager`, `receptionist`"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Restaurant",
+            "description": "Restaurant menu, orders, and batch management.",
+            "item": [
+                {
+                    "name": "Menu",
+                    "item": [
+                        {
+                            "name": "Get Menu Items (Public)",
+                            "request": {
+                                "auth": {
+                                    "type": "noauth"
+                                },
+                                "method": "GET",
+                                "url": {
+                                    "raw": "{{baseUrl}}/restaurant/menu",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "restaurant",
+                                        "menu"
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "category",
+                                            "value": "",
+                                            "disabled": true,
+                                            "description": "appetizer | main_course | dessert | beverage | breakfast | lunch | dinner"
+                                        },
+                                        {
+                                            "key": "isAvailable",
+                                            "value": "",
+                                            "disabled": true,
+                                            "description": "true | false"
+                                        }
+                                    ]
+                                },
+                                "description": "Get all menu items. No authentication required. Cached for 10 minutes."
+                            }
+                        },
+                        {
+                            "name": "Create Menu Item",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{baseUrl}}/restaurant/menu",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "restaurant",
+                                        "menu"
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"name\": \"Jollof Rice\",\n  \"category\": \"main_course\",\n  \"price\": 3500,\n  \"description\": \"Nigerian party jollof rice with chicken\",\n  \"cost\": 1500,\n  \"preparationTime\": 25,\n  \"cuisine\": \"Nigerian\",\n  \"isVegetarian\": false,\n  \"isVegan\": false,\n  \"allergens\": [],\n  \"stock\": 50\n}"
+                                },
+                                "description": "Create a new menu item.\n\nRoles: `super_admin`, `admin`"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Orders",
+                    "item": [
+                        {
+                            "name": "Create Order",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{baseUrl}}/restaurant/orders",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "restaurant",
+                                        "orders"
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"items\": [\n    { \"menuItemId\": \"uuid-of-menu-item\", \"quantity\": 2 },\n    { \"menuItemId\": \"uuid-of-another-item\", \"quantity\": 1, \"details\": \"No onions\" }\n  ],\n  \"orderType\": \"dine_in\",\n  \"tableNumber\": \"T5\",\n  \"specialInstructions\": \"Extra spicy\",\n  \"reservationId\": null\n}"
+                                },
+                                "description": "Create a new restaurant order.\n\nValid `orderType`: `dine_in`, `room_service`, `takeaway`\n\nRoles: `super_admin`, `admin`, `supervisor`, `kitchen_staff`, `waiter`"
+                            }
+                        },
+                        {
+                            "name": "Get All Orders",
+                            "request": {
+                                "method": "GET",
+                                "url": {
+                                    "raw": "{{baseUrl}}/restaurant/orders?page=1&limit=10",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "restaurant",
+                                        "orders"
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "status",
+                                            "value": "",
+                                            "disabled": true,
+                                            "description": "pending | preparing | ready | served | completed | cancelled"
+                                        },
+                                        {
+                                            "key": "orderType",
+                                            "value": "",
+                                            "disabled": true
+                                        },
+                                        {
+                                            "key": "startDate",
+                                            "value": "",
+                                            "disabled": true
+                                        },
+                                        {
+                                            "key": "endDate",
+                                            "value": "",
+                                            "disabled": true
+                                        },
+                                        {
+                                            "key": "page",
+                                            "value": "1"
+                                        },
+                                        {
+                                            "key": "limit",
+                                            "value": "10"
+                                        }
+                                    ]
+                                },
+                                "description": "Get all restaurant orders.\n\nRoles: `super_admin`, `admin`, `accountant`, `supervisor`, `kitchen_staff`"
+                            }
+                        },
+                        {
+                            "name": "Get Order by ID",
+                            "request": {
+                                "method": "GET",
+                                "url": {
+                                    "raw": "{{baseUrl}}/restaurant/orders/:id",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "restaurant",
+                                        "orders",
+                                        ":id"
+                                    ],
+                                    "variable": [
+                                        {
+                                            "key": "id",
+                                            "value": "uuid-here"
+                                        }
+                                    ]
+                                },
+                                "description": "Get a single restaurant order by UUID.\n\nRoles: `super_admin`, `admin`, `accountant`, `supervisor`, `kitchen_staff`"
+                            }
+                        },
+                        {
+                            "name": "Update Order Status",
+                            "request": {
+                                "method": "PATCH",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{baseUrl}}/restaurant/orders/:id/status",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "restaurant",
+                                        "orders",
+                                        ":id",
+                                        "status"
+                                    ],
+                                    "variable": [
+                                        {
+                                            "key": "id",
+                                            "value": "uuid-here"
+                                        }
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"status\": \"preparing\"\n}"
+                                },
+                                "description": "Update the status of a restaurant order.\n\nValid statuses: `pending`, `preparing`, `ready`, `served`, `completed`, `cancelled`\n\nRoles: `super_admin`, `admin`, `accountant`, `supervisor`, `kitchen_staff`"
+                            }
+                        },
+                        {
+                            "name": "Complete Payment",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{baseUrl}}/restaurant/orders/:id/payment",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "restaurant",
+                                        "orders",
+                                        ":id",
+                                        "payment"
+                                    ],
+                                    "variable": [
+                                        {
+                                            "key": "id",
+                                            "value": "uuid-here"
+                                        }
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"paymentMethod\": \"cash\"\n}"
+                                },
+                                "description": "Mark an order as paid.\n\nValid `paymentMethod`: `cash`, `card`, `room_charge`, `mobile_money`\n\nRoles: `super_admin`, `admin`, `accountant`, `supervisor`, `kitchen_staff`"
+                            }
+                        },
+                        {
+                            "name": "Delete All Orders (Super Admin)",
+                            "request": {
+                                "method": "DELETE",
+                                "url": {
+                                    "raw": "{{baseUrl}}/restaurant/orders/delete-all",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "restaurant",
+                                        "orders",
+                                        "delete-all"
+                                    ]
+                                },
+                                "description": "Permanently delete all restaurant orders and related data.\n\nRoles: `super_admin` only"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Order Items",
+                    "item": [
+                        {
+                            "name": "Update Order Item",
+                            "request": {
+                                "method": "PATCH",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{baseUrl}}/restaurant/order-items/:itemId",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "restaurant",
+                                        "order-items",
+                                        ":itemId"
+                                    ],
+                                    "variable": [
+                                        {
+                                            "key": "itemId",
+                                            "value": "uuid-here"
+                                        }
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"quantity\": 3,\n  \"details\": \"Extra sauce\"\n}"
+                                },
+                                "description": "Update details of a specific order item.\n\nRoles: `super_admin`, `admin`, `supervisor`, `kitchen_staff`, `waiter`"
+                            }
+                        },
+                        {
+                            "name": "Update Order Item Status",
+                            "request": {
+                                "method": "PATCH",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{baseUrl}}/restaurant/order-items/:itemId/status",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "restaurant",
+                                        "order-items",
+                                        ":itemId",
+                                        "status"
+                                    ],
+                                    "variable": [
+                                        {
+                                            "key": "itemId",
+                                            "value": "uuid-here"
+                                        }
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"status\": \"ready\"\n}"
+                                },
+                                "description": "Update the status of a specific order item.\n\nRoles: `super_admin`, `admin`, `supervisor`, `kitchen_staff`, `waiter`"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Batches",
+                    "item": [
+                        {
+                            "name": "Create Batch Order",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{baseUrl}}/restaurant/batch-orders",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "restaurant",
+                                        "batch-orders"
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"sources\": [\n    {\n      \"sourceId\": \"T5\",\n      \"sourceName\": \"Table 5\",\n      \"sourceType\": \"table\",\n      \"orders\": [\n        { \"id\": \"uuid-of-menu-item\", \"quantity\": 2, \"specialInstructions\": \"No pepper\" },\n        { \"id\": \"uuid-of-another-item\", \"quantity\": 1 }\n      ],\n      \"total\": 8500\n    }\n  ],\n  \"notes\": \"VIP table, priority service\"\n}"
+                                },
+                                "description": "Create a batch order with multiple sources (tables, rooms, facilities).\n\nValid `sourceType`: `room`, `table`, `facility`\n\nRoles: `super_admin`, `admin`, `supervisor`, `kitchen_staff`, `waiter`"
+                            }
+                        },
+                        {
+                            "name": "Get All Batch Orders",
+                            "request": {
+                                "method": "GET",
+                                "url": {
+                                    "raw": "{{baseUrl}}/restaurant/batch-orders",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "restaurant",
+                                        "batch-orders"
+                                    ]
+                                },
+                                "description": "Get all batch orders.\n\nRoles: `super_admin`, `admin`, `accountant`, `supervisor`"
+                            }
+                        },
+                        {
+                            "name": "Get All Batches",
+                            "request": {
+                                "method": "GET",
+                                "url": {
+                                    "raw": "{{baseUrl}}/restaurant/batches?page=1&limit=10",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "restaurant",
+                                        "batches"
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "status",
+                                            "value": "",
+                                            "disabled": true
+                                        },
+                                        {
+                                            "key": "staffId",
+                                            "value": "",
+                                            "disabled": true
+                                        },
+                                        {
+                                            "key": "startDate",
+                                            "value": "",
+                                            "disabled": true
+                                        },
+                                        {
+                                            "key": "endDate",
+                                            "value": "",
+                                            "disabled": true
+                                        },
+                                        {
+                                            "key": "page",
+                                            "value": "1"
+                                        },
+                                        {
+                                            "key": "limit",
+                                            "value": "10"
+                                        }
+                                    ]
+                                },
+                                "description": "Get all batches.\n\nRoles: `super_admin`, `admin`, `accountant`, `supervisor`, `kitchen_staff`"
+                            }
+                        },
+                        {
+                            "name": "Get Batches by Date",
+                            "request": {
+                                "method": "GET",
+                                "url": {
+                                    "raw": "{{baseUrl}}/restaurant/batches/date/:date",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "restaurant",
+                                        "batches",
+                                        "date",
+                                        ":date"
+                                    ],
+                                    "variable": [
+                                        {
+                                            "key": "date",
+                                            "value": "2026-04-13"
+                                        }
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "staffId",
+                                            "value": "",
+                                            "disabled": true
+                                        }
+                                    ]
+                                },
+                                "description": "Get all batches for a specific date (YYYY-MM-DD).\n\nRoles: `super_admin`, `admin`, `accountant`, `supervisor`, `kitchen_staff`"
+                            }
+                        },
+                        {
+                            "name": "Get Batch by ID",
+                            "request": {
+                                "method": "GET",
+                                "url": {
+                                    "raw": "{{baseUrl}}/restaurant/batches/:id",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "restaurant",
+                                        "batches",
+                                        ":id"
+                                    ],
+                                    "variable": [
+                                        {
+                                            "key": "id",
+                                            "value": "BATCH-260413-120000-001"
+                                        }
+                                    ]
+                                },
+                                "description": "Get a batch by UUID or batch ID (e.g. `BATCH-260413-120000-001`).\n\nRoles: `super_admin`, `admin`, `accountant`, `supervisor`, `kitchen_staff`"
+                            }
+                        },
+                        {
+                            "name": "Add Order to Batch",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{baseUrl}}/restaurant/batches/:batchId/orders",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "restaurant",
+                                        "batches",
+                                        ":batchId",
+                                        "orders"
+                                    ],
+                                    "variable": [
+                                        {
+                                            "key": "batchId",
+                                            "value": "BATCH-260413-120000-001"
+                                        }
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"orderId\": \"uuid-of-order\"\n}"
+                                },
+                                "description": "Add an existing order to a batch.\n\nRoles: `super_admin`, `admin`, `supervisor`, `kitchen_staff`, `waiter`"
+                            }
+                        },
+                        {
+                            "name": "Update Batch Status",
+                            "request": {
+                                "method": "PATCH",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{baseUrl}}/restaurant/batches/:id/status",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "restaurant",
+                                        "batches",
+                                        ":id",
+                                        "status"
+                                    ],
+                                    "variable": [
+                                        {
+                                            "key": "id",
+                                            "value": "BATCH-260413-120000-001"
+                                        }
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"status\": \"processing\"\n}"
+                                },
+                                "description": "Update batch status.\n\nValid statuses: `pending`, `processing`, `completed`, `cancelled`\n\nRoles: `super_admin`, `admin`, `supervisor`, `kitchen_staff`, `waiter`"
+                            }
+                        },
+                        {
+                            "name": "Complete Batch",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{baseUrl}}/restaurant/batches/:id/complete",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "restaurant",
+                                        "batches",
+                                        ":id",
+                                        "complete"
+                                    ],
+                                    "variable": [
+                                        {
+                                            "key": "id",
+                                            "value": "BATCH-260413-120000-001"
+                                        }
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"paymentMethod\": \"cash\"\n}"
+                                },
+                                "description": "Mark a batch as completed and process payment.\n\nValid `paymentMethod`: `cash`, `card`, `room_charge`, `mobile_money`\n\nRoles: `super_admin`, `admin`, `supervisor`, `kitchen_staff`, `waiter`"
+                            }
+                        },
+                        {
+                            "name": "Cancel Batch",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{baseUrl}}/restaurant/batches/:id/cancel",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "restaurant",
+                                        "batches",
+                                        ":id",
+                                        "cancel"
+                                    ],
+                                    "variable": [
+                                        {
+                                            "key": "id",
+                                            "value": "BATCH-260413-120000-001"
+                                        }
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"reason\": \"Customer left before order was ready\"\n}"
+                                },
+                                "description": "Cancel a batch.\n\nRoles: `super_admin`, `admin`, `supervisor`, `kitchen_staff`, `waiter`"
+                            }
+                        },
+                        {
+                            "name": "Edit Batch Order",
+                            "request": {
+                                "method": "PATCH",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{baseUrl}}/restaurant/batches/:id/edit",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "restaurant",
+                                        "batches",
+                                        ":id",
+                                        "edit"
+                                    ],
+                                    "variable": [
+                                        {
+                                            "key": "id",
+                                            "value": "BATCH-260413-120000-001"
+                                        }
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"action\": \"increase\",\n  \"menuItemId\": \"uuid-of-menu-item\",\n  \"quantity\": 1,\n  \"reason\": \"Customer requested additional portion\"\n}"
+                                },
+                                "description": "Edit items within a batch order.\n\nValid `action`: `increase`, `reduce`, `remove`, `add`\n\nRoles: `super_admin`, `admin`, `supervisor`, `kitchen_staff`, `waiter`"
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Bar",
+            "description": "Bar items and order management.",
+            "item": [
+                {
+                    "name": "Get Bar Items",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/bar/items",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "bar",
+                                "items"
+                            ],
+                            "query": [
+                                {
+                                    "key": "category",
+                                    "value": "",
+                                    "disabled": true,
+                                    "description": "beer | wine | spirits | cocktail | mocktail | shake | soft_drink | juice | water | smoke | other"
+                                },
+                                {
+                                    "key": "isAvailable",
+                                    "value": "",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "Get all bar items. Requires authentication. Cached for 10 minutes."
+                    }
+                },
+                {
+                    "name": "Create Bar Item",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/bar/items",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "bar",
+                                "items"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Heineken\",\n  \"category\": \"beer\",\n  \"price\": 1200,\n  \"description\": \"Premium lager beer\",\n  \"brand\": \"Heineken\",\n  \"volume\": \"600ml\",\n  \"alcoholContent\": 5.0,\n  \"stock\": 100,\n  \"reorderLevel\": 20\n}"
+                        },
+                        "description": "Create a new bar item.\n\nValid `category`: `beer`, `wine`, `spirits`, `cocktail`, `mocktail`, `shake`, `soft_drink`, `juice`, `water`, `smoke`, `other`\n\nRoles: `super_admin`, `admin`"
+                    }
+                },
+                {
+                    "name": "Update Bar Item Stock",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/bar/items/:id/stock",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "bar",
+                                "items",
+                                ":id",
+                                "stock"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "uuid-here"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"quantity\": 50\n}"
+                        },
+                        "description": "Update the stock quantity for a bar item.\n\nRoles: `super_admin`, `admin`, `accountant`, `supervisor`"
+                    }
+                },
+                {
+                    "name": "Create Bar Order",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/bar/orders",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "bar",
+                                "orders"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"items\": [\n    { \"barItemId\": \"uuid-of-bar-item\", \"quantity\": 2 },\n    { \"barItemId\": \"uuid-of-another-item\", \"quantity\": 1 }\n  ],\n  \"orderType\": \"bar\",\n  \"tableNumber\": \"B3\"\n}"
+                        },
+                        "description": "Create a new bar order.\n\nValid `orderType`: `bar`, `room_service`\n\nRoles: `super_admin`, `admin`, `supervisor`, `bar_staff`, `waiter`"
+                    }
+                },
+                {
+                    "name": "Get All Bar Orders",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/bar/orders?page=1&limit=10",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "bar",
+                                "orders"
+                            ],
+                            "query": [
+                                {
+                                    "key": "status",
+                                    "value": "",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "orderType",
+                                    "value": "",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "startDate",
+                                    "value": "",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "endDate",
+                                    "value": "",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                }
+                            ]
+                        },
+                        "description": "Get all bar orders.\n\nRoles: `super_admin`, `admin`, `accountant`, `supervisor`, `waiter`"
+                    }
+                },
+                {
+                    "name": "Get Bar Order by ID",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/bar/orders/:id",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "bar",
+                                "orders",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "uuid-here"
+                                }
+                            ]
+                        },
+                        "description": "Get a single bar order by UUID.\n\nRoles: `super_admin`, `admin`, `accountant`, `supervisor`, `waiter`"
+                    }
+                },
+                {
+                    "name": "Update Bar Order Status",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/bar/orders/:id/status",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "bar",
+                                "orders",
+                                ":id",
+                                "status"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "uuid-here"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"status\": \"serving\"\n}"
+                        },
+                        "description": "Update the status of a bar order.\n\nRoles: `super_admin`, `admin`, `accountant`, `supervisor`, `waiter`"
+                    }
+                },
+                {
+                    "name": "Complete Bar Order Payment",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/bar/orders/:id/payment",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "bar",
+                                "orders",
+                                ":id",
+                                "payment"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "uuid-here"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"paymentMethod\": \"card\"\n}"
+                        },
+                        "description": "Mark a bar order as paid.\n\nValid `paymentMethod`: `cash`, `card`, `room_charge`, `mobile_money`\n\nRoles: `super_admin`, `admin`, `accountant`, `supervisor`, `waiter`"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Inventory",
+            "description": "Inventory item and stock transaction management.",
+            "item": [
+                {
+                    "name": "Items",
+                    "item": [
+                        {
+                            "name": "Create Inventory Item",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{baseUrl}}/inventory/items",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "inventory",
+                                        "items"
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"name\": \"Toilet Paper\",\n  \"category\": \"Housekeeping\",\n  \"sku\": \"HK-TP-001\",\n  \"description\": \"2-ply toilet paper rolls\",\n  \"unit\": \"rolls\",\n  \"minLevel\": 50,\n  \"maxLevel\": 500,\n  \"reorderLevel\": 100,\n  \"costPrice\": 150,\n  \"sellingPrice\": 0,\n  \"supplier\": \"CleanSupplies Ltd\",\n  \"location\": \"Store Room A\"\n}"
+                                },
+                                "description": "Create a new inventory item.\n\nRoles: `super_admin`, `admin`"
+                            }
+                        },
+                        {
+                            "name": "Create Batch Inventory Items",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{baseUrl}}/inventory/items/batch",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "inventory",
+                                        "items",
+                                        "batch"
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"items\": [\n    {\n      \"name\": \"Hand Soap\",\n      \"category\": \"Housekeeping\",\n      \"sku\": \"HK-HS-001\",\n      \"unit\": \"bottles\",\n      \"minLevel\": 20,\n      \"reorderLevel\": 40,\n      \"costPrice\": 500\n    },\n    {\n      \"name\": \"Cooking Oil\",\n      \"category\": \"Kitchen\",\n      \"sku\": \"KT-CO-001\",\n      \"unit\": \"litres\",\n      \"minLevel\": 10,\n      \"reorderLevel\": 20,\n      \"costPrice\": 2500\n    }\n  ]\n}"
+                                },
+                                "description": "Create multiple inventory items in a single request.\n\nRoles: `super_admin`, `admin`"
+                            }
+                        },
+                        {
+                            "name": "Get All Inventory Items",
+                            "request": {
+                                "method": "GET",
+                                "url": {
+                                    "raw": "{{baseUrl}}/inventory/items?page=1&limit=10",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "inventory",
+                                        "items"
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "category",
+                                            "value": "",
+                                            "disabled": true
+                                        },
+                                        {
+                                            "key": "search",
+                                            "value": "",
+                                            "disabled": true
+                                        },
+                                        {
+                                            "key": "lowStock",
+                                            "value": "",
+                                            "disabled": true,
+                                            "description": "true — show only items below reorder level"
+                                        },
+                                        {
+                                            "key": "page",
+                                            "value": "1"
+                                        },
+                                        {
+                                            "key": "limit",
+                                            "value": "10"
+                                        }
+                                    ]
+                                },
+                                "description": "Get all inventory items. All authenticated users."
+                            }
+                        },
+                        {
+                            "name": "Get Inventory Item by ID",
+                            "request": {
+                                "method": "GET",
+                                "url": {
+                                    "raw": "{{baseUrl}}/inventory/items/:id",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "inventory",
+                                        "items",
+                                        ":id"
+                                    ],
+                                    "variable": [
+                                        {
+                                            "key": "id",
+                                            "value": "uuid-here"
+                                        }
+                                    ]
+                                },
+                                "description": "Get a single inventory item by UUID. All authenticated users."
+                            }
+                        },
+                        {
+                            "name": "Update Inventory Item",
+                            "request": {
+                                "method": "PATCH",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{baseUrl}}/inventory/items/:id",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "inventory",
+                                        "items",
+                                        ":id"
+                                    ],
+                                    "variable": [
+                                        {
+                                            "key": "id",
+                                            "value": "uuid-here"
+                                        }
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"name\": \"Toilet Paper (Premium)\",\n  \"minLevel\": 60,\n  \"reorderLevel\": 120,\n  \"costPrice\": 180\n}"
+                                },
+                                "description": "Update an inventory item.\n\nRoles: `super_admin`, `admin`"
+                            }
+                        },
+                        {
+                            "name": "Delete Inventory Item",
+                            "request": {
+                                "method": "DELETE",
+                                "url": {
+                                    "raw": "{{baseUrl}}/inventory/items/:id",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "inventory",
+                                        "items",
+                                        ":id"
+                                    ],
+                                    "variable": [
+                                        {
+                                            "key": "id",
+                                            "value": "uuid-here"
+                                        }
+                                    ]
+                                },
+                                "description": "Delete an inventory item.\n\nRoles: `super_admin`, `admin`"
+                            }
+                        },
+                        {
+                            "name": "Get Item with All Transactions",
+                            "request": {
+                                "method": "GET",
+                                "url": {
+                                    "raw": "{{baseUrl}}/inventory/items/:itemId/transactions",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "inventory",
+                                        "items",
+                                        ":itemId",
+                                        "transactions"
+                                    ],
+                                    "variable": [
+                                        {
+                                            "key": "itemId",
+                                            "value": "uuid-here"
+                                        }
+                                    ]
+                                },
+                                "description": "Get an item with its complete transaction history (additions, subtractions, allocations). All authenticated users."
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Stock Operations",
+                    "item": [
+                        {
+                            "name": "Add Stock",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{baseUrl}}/inventory/items/:itemId/stock",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "inventory",
+                                        "items",
+                                        ":itemId",
+                                        "stock"
+                                    ],
+                                    "variable": [
+                                        {
+                                            "key": "itemId",
+                                            "value": "uuid-here"
+                                        }
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"quantity\": 100,\n  \"reason\": \"Monthly restock\",\n  \"reference\": \"PO-2026-001\",\n  \"batchNumber\": \"BATCH-001\",\n  \"notes\": \"Received from CleanSupplies Ltd\"\n}"
+                                },
+                                "description": "Receive new stock for an inventory item.\n\nRoles: `super_admin`, `admin`"
+                            }
+                        },
+                        {
+                            "name": "Allocate Stock",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{baseUrl}}/inventory/items/:itemId/allocate",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "inventory",
+                                        "items",
+                                        ":itemId",
+                                        "allocate"
+                                    ],
+                                    "variable": [
+                                        {
+                                            "key": "itemId",
+                                            "value": "uuid-here"
+                                        }
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"quantity\": 20,\n  \"reason\": \"Weekly allocation to housekeeping\"\n}"
+                                },
+                                "description": "Allocate stock from inventory (reduce available quantity).\n\nRoles: `super_admin`, `admin`"
+                            }
+                        },
+                        {
+                            "name": "Get Stock History",
+                            "request": {
+                                "method": "GET",
+                                "url": {
+                                    "raw": "{{baseUrl}}/inventory/items/:itemId/history",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "inventory",
+                                        "items",
+                                        ":itemId",
+                                        "history"
+                                    ],
+                                    "variable": [
+                                        {
+                                            "key": "itemId",
+                                            "value": "uuid-here"
+                                        }
+                                    ]
+                                },
+                                "description": "Get the stock transaction history for an item. All authenticated users."
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Additions",
+                    "item": [
+                        {
+                            "name": "Create Addition",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{baseUrl}}/inventory/items/:itemId/additions",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "inventory",
+                                        "items",
+                                        ":itemId",
+                                        "additions"
+                                    ],
+                                    "variable": [
+                                        {
+                                            "key": "itemId",
+                                            "value": "uuid-here"
+                                        }
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"quantity\": 50,\n  \"reason\": \"Emergency restock\",\n  \"reference\": \"PO-2026-002\",\n  \"notes\": \"Urgent delivery\"\n}"
+                                },
+                                "description": "Add new stock to an inventory item.\n\nRoles: `super_admin`, `admin`"
+                            }
+                        },
+                        {
+                            "name": "Get Additions",
+                            "request": {
+                                "method": "GET",
+                                "url": {
+                                    "raw": "{{baseUrl}}/inventory/items/:itemId/additions",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "inventory",
+                                        "items",
+                                        ":itemId",
+                                        "additions"
+                                    ],
+                                    "variable": [
+                                        {
+                                            "key": "itemId",
+                                            "value": "uuid-here"
+                                        }
+                                    ]
+                                },
+                                "description": "Get all stock additions for an item. All authenticated users."
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Subtractions",
+                    "item": [
+                        {
+                            "name": "Create Subtraction",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{baseUrl}}/inventory/items/:itemId/subtractions",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "inventory",
+                                        "items",
+                                        ":itemId",
+                                        "subtractions"
+                                    ],
+                                    "variable": [
+                                        {
+                                            "key": "itemId",
+                                            "value": "uuid-here"
+                                        }
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"quantity\": 5,\n  \"reason\": \"Damaged goods\",\n  \"notes\": \"Found broken during inspection\"\n}"
+                                },
+                                "description": "Subtract stock from inventory (damage, loss, expiry, etc.).\n\nRoles: `super_admin`, `admin`"
+                            }
+                        },
+                        {
+                            "name": "Get Subtractions",
+                            "request": {
+                                "method": "GET",
+                                "url": {
+                                    "raw": "{{baseUrl}}/inventory/items/:itemId/subtractions",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "inventory",
+                                        "items",
+                                        ":itemId",
+                                        "subtractions"
+                                    ],
+                                    "variable": [
+                                        {
+                                            "key": "itemId",
+                                            "value": "uuid-here"
+                                        }
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "subtractionCause",
+                                            "value": "",
+                                            "disabled": true
+                                        }
+                                    ]
+                                },
+                                "description": "Get all stock subtractions for an item. All authenticated users."
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Allocations",
+                    "item": [
+                        {
+                            "name": "Create Allocation",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{baseUrl}}/inventory/items/:itemId/allocations",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "inventory",
+                                        "items",
+                                        ":itemId",
+                                        "allocations"
+                                    ],
+                                    "variable": [
+                                        {
+                                            "key": "itemId",
+                                            "value": "uuid-here"
+                                        }
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"quantity\": 30,\n  \"departmentId\": \"uuid-of-department\",\n  \"reason\": \"Weekly kitchen allocation\",\n  \"notes\": \"For restaurant use\"\n}"
+                                },
+                                "description": "Allocate stock to a department.\n\nRoles: `super_admin`, `admin`"
+                            }
+                        },
+                        {
+                            "name": "Get Item Allocations",
+                            "request": {
+                                "method": "GET",
+                                "url": {
+                                    "raw": "{{baseUrl}}/inventory/items/:itemId/allocations",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "inventory",
+                                        "items",
+                                        ":itemId",
+                                        "allocations"
+                                    ],
+                                    "variable": [
+                                        {
+                                            "key": "itemId",
+                                            "value": "uuid-here"
+                                        }
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "department",
+                                            "value": "",
+                                            "disabled": true
+                                        }
+                                    ]
+                                },
+                                "description": "Get all allocations for an inventory item. All authenticated users."
+                            }
+                        },
+                        {
+                            "name": "Get Bar Allocations",
+                            "request": {
+                                "method": "GET",
+                                "url": {
+                                    "raw": "{{baseUrl}}/inventory/allocations/bar",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "inventory",
+                                        "allocations",
+                                        "bar"
+                                    ]
+                                },
+                                "description": "Get all inventory items allocated to the bar department. All authenticated users."
+                            }
+                        },
+                        {
+                            "name": "Get Restaurant Allocations",
+                            "request": {
+                                "method": "GET",
+                                "url": {
+                                    "raw": "{{baseUrl}}/inventory/allocations/restaurant",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "inventory",
+                                        "allocations",
+                                        "restaurant"
+                                    ]
+                                },
+                                "description": "Get all inventory items allocated to the restaurant department. All authenticated users."
+                            }
+                        },
+                        {
+                            "name": "Get Department Allocations",
+                            "request": {
+                                "method": "GET",
+                                "url": {
+                                    "raw": "{{baseUrl}}/inventory/allocations/department/:departmentCode",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "inventory",
+                                        "allocations",
+                                        "department",
+                                        ":departmentCode"
+                                    ],
+                                    "variable": [
+                                        {
+                                            "key": "departmentCode",
+                                            "value": "housekeeping"
+                                        }
+                                    ]
+                                },
+                                "description": "Get all inventory items allocated to a specific department by department code. All authenticated users."
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Guests",
+            "description": "Guest profile management.",
+            "item": [
+                {
+                    "name": "Create Guest",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/guests",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "guests"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"firstName\": \"Emeka\",\n  \"lastName\": \"Okafor\",\n  \"email\": \"emeka@example.com\",\n  \"phone\": \"+2348033445566\",\n  \"address\": \"15 Ring Road\",\n  \"city\": \"Benin City\",\n  \"country\": \"Nigeria\",\n  \"nationality\": \"Nigerian\",\n  \"idType\": \"national_id\",\n  \"idNumber\": \"NIN87654321\",\n  \"dateOfBirth\": \"1985-03-20\",\n  \"gender\": \"male\",\n  \"notes\": \"VIP guest, prefers quiet rooms\"\n}"
+                        },
+                        "description": "Create a new guest profile.\n\nValid `idType`: `passport`, `national_id`, `driver_license`, `voter_card`, `other`\n\nRoles: `super_admin`, `admin`, `manager`, `receptionist`"
+                    }
+                },
+                {
+                    "name": "Get All Guests",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/guests?page=1&limit=10",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "guests"
+                            ],
+                            "query": [
+                                {
+                                    "key": "search",
+                                    "value": "",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "nationality",
+                                    "value": "",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "idType",
+                                    "value": "",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                }
+                            ]
+                        },
+                        "description": "Get all guests with optional filters.\n\nRoles: `super_admin`, `admin`, `manager`, `receptionist`, `accountant`, `supervisor`"
+                    }
+                },
+                {
+                    "name": "Search Guests",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/guests/search?query=emeka",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "guests",
+                                "search"
+                            ],
+                            "query": [
+                                {
+                                    "key": "query",
+                                    "value": "emeka",
+                                    "description": "Search by name, email, phone, or ID number"
+                                }
+                            ]
+                        },
+                        "description": "Search guests by name, email, phone, or ID number.\n\nRoles: `super_admin`, `admin`, `manager`, `receptionist`, `accountant`, `supervisor`"
+                    }
+                },
+                {
+                    "name": "Get Guest by ID",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/guests/:id",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "guests",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "uuid-here"
+                                }
+                            ]
+                        },
+                        "description": "Get a guest by UUID including their reservation history.\n\nRoles: `super_admin`, `admin`, `manager`, `receptionist`, `accountant`, `supervisor`"
+                    }
+                },
+                {
+                    "name": "Update Guest",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/guests/:id",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "guests",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "uuid-here"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"firstName\": \"Emeka\",\n  \"lastName\": \"Okafor\",\n  \"email\": \"emeka.updated@example.com\",\n  \"phone\": \"+2348033445566\",\n  \"address\": \"20 Airport Road\",\n  \"city\": \"Benin City\",\n  \"country\": \"Nigeria\",\n  \"notes\": \"Updated contact info\"\n}"
+                        },
+                        "description": "Update a guest's profile.\n\nRoles: `super_admin`, `admin`, `manager`, `receptionist`"
+                    }
+                },
+                {
+                    "name": "Delete Guest",
+                    "request": {
+                        "method": "DELETE",
+                        "url": {
+                            "raw": "{{baseUrl}}/guests/:id",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "guests",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "uuid-here"
+                                }
+                            ]
+                        },
+                        "description": "Soft-delete a guest record.\n\nRoles: `super_admin`, `admin`"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Users & Staff",
+            "description": "Staff and user account management. All endpoints require super_admin or admin.",
+            "item": [
+                {
+                    "name": "Get All Users",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/users",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "users"
+                            ]
+                        },
+                        "description": "Get all user accounts.\n\nRoles: `super_admin`, `admin`"
+                    }
+                },
+                {
+                    "name": "Get User by ID",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/users/:id",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "users",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "uuid-here"
+                                }
+                            ]
+                        },
+                        "description": "Get a user by UUID.\n\nRoles: `super_admin`, `admin`"
+                    }
+                },
+                {
+                    "name": "Update User",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/users/:id",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "users",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "uuid-here"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"firstName\": \"Updated\",\n  \"lastName\": \"Name\",\n  \"role\": \"supervisor\",\n  \"status\": \"active\",\n  \"phoneNumber\": \"+2348099887766\"\n}"
+                        },
+                        "description": "Update a user account.\n\nValid `status`: `active`, `inactive`, `suspended`, `disabled`, `on leave`, `retired`, `retrenched`\n\nRoles: `super_admin`, `admin`"
+                    }
+                },
+                {
+                    "name": "Delete User",
+                    "request": {
+                        "method": "DELETE",
+                        "url": {
+                            "raw": "{{baseUrl}}/users/:id",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "users",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "uuid-here"
+                                }
+                            ]
+                        },
+                        "description": "Delete a user account.\n\nRoles: `super_admin`, `admin`"
+                    }
+                },
+                {
+                    "name": "Get All Staff",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/users/staff/all",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "users",
+                                "staff",
+                                "all"
+                            ]
+                        },
+                        "description": "Get all staff members.\n\nRoles: `super_admin`, `admin`"
+                    }
+                },
+                {
+                    "name": "Update Staff",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/users/staff/:id",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "users",
+                                "staff",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "uuid-here"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"position\": \"Senior Receptionist\",\n  \"status\": \"active\"\n}"
+                        },
+                        "description": "Update a staff member's details.\n\nRoles: `super_admin`, `admin`"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Departments",
+            "description": "Department management.",
+            "item": [
+                {
+                    "name": "Get All Departments",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/departments",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "departments"
+                            ]
+                        },
+                        "description": "Get all departments. All authenticated users."
+                    }
+                },
+                {
+                    "name": "Get Department by ID",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/departments/:id",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "departments",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "uuid-here"
+                                }
+                            ]
+                        },
+                        "description": "Get a department by UUID. All authenticated users."
+                    }
+                },
+                {
+                    "name": "Get Department Stats",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/departments/:id/stats",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "departments",
+                                ":id",
+                                "stats"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "uuid-here"
+                                }
+                            ]
+                        },
+                        "description": "Get statistics for a department. All authenticated users."
+                    }
+                },
+                {
+                    "name": "Create Department",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/departments",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "departments"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Housekeeping\",\n  \"code\": \"HK\",\n  \"description\": \"Responsible for room cleaning and maintenance\",\n  \"budget\": 500000,\n  \"contactEmail\": \"housekeeping@elitehub.com\",\n  \"contactPhone\": \"+2348011223344\",\n  \"status\": \"active\"\n}"
+                        },
+                        "description": "Create a new department.\n\nRoles: `super_admin`, `admin`"
+                    }
+                },
+                {
+                    "name": "Update Department",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/departments/:id",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "departments",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "uuid-here"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Housekeeping & Laundry\",\n  \"budget\": 600000\n}"
+                        },
+                        "description": "Update a department.\n\nRoles: `super_admin`, `admin`"
+                    }
+                },
+                {
+                    "name": "Delete Department",
+                    "request": {
+                        "method": "DELETE",
+                        "url": {
+                            "raw": "{{baseUrl}}/departments/:id",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "departments",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "uuid-here"
+                                }
+                            ]
+                        },
+                        "description": "Delete a department.\n\nRoles: `super_admin`, `admin`"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Reports",
+            "description": "Business intelligence and reporting. All endpoints require `startDate` and `endDate` query params.",
+            "item": [
+                {
+                    "name": "Revenue Report",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/reports/revenue?startDate=2026-04-01&endDate=2026-04-30",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "reports",
+                                "revenue"
+                            ],
+                            "query": [
+                                {
+                                    "key": "startDate",
+                                    "value": "2026-04-01"
+                                },
+                                {
+                                    "key": "endDate",
+                                    "value": "2026-04-30"
+                                }
+                            ]
+                        },
+                        "description": "Get revenue report for a date range.\n\nRoles: `super_admin`, `admin`, `accountant`, `supervisor`"
+                    }
+                },
+                {
+                    "name": "Occupancy Report",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/reports/occupancy?startDate=2026-04-01&endDate=2026-04-30",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "reports",
+                                "occupancy"
+                            ],
+                            "query": [
+                                {
+                                    "key": "startDate",
+                                    "value": "2026-04-01"
+                                },
+                                {
+                                    "key": "endDate",
+                                    "value": "2026-04-30"
+                                }
+                            ]
+                        },
+                        "description": "Get room occupancy report.\n\nRoles: `super_admin`, `admin`, `accountant`, `supervisor`, `receptionist`"
+                    }
+                },
+                {
+                    "name": "Reservation Stats",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/reports/reservations?startDate=2026-04-01&endDate=2026-04-30",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "reports",
+                                "reservations"
+                            ],
+                            "query": [
+                                {
+                                    "key": "startDate",
+                                    "value": "2026-04-01"
+                                },
+                                {
+                                    "key": "endDate",
+                                    "value": "2026-04-30"
+                                }
+                            ]
+                        },
+                        "description": "Get reservation statistics.\n\nRoles: `super_admin`, `admin`, `accountant`, `supervisor`, `receptionist`"
+                    }
+                },
+                {
+                    "name": "Feedback Summary",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/reports/feedback?startDate=2026-04-01&endDate=2026-04-30",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "reports",
+                                "feedback"
+                            ],
+                            "query": [
+                                {
+                                    "key": "startDate",
+                                    "value": "2026-04-01"
+                                },
+                                {
+                                    "key": "endDate",
+                                    "value": "2026-04-30"
+                                }
+                            ]
+                        },
+                        "description": "Get guest feedback summary.\n\nRoles: `super_admin`, `admin`, `accountant`, `supervisor`"
+                    }
+                },
+                {
+                    "name": "Top Performing Rooms",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/reports/top-rooms?startDate=2026-04-01&endDate=2026-04-30&limit=10",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "reports",
+                                "top-rooms"
+                            ],
+                            "query": [
+                                {
+                                    "key": "startDate",
+                                    "value": "2026-04-01"
+                                },
+                                {
+                                    "key": "endDate",
+                                    "value": "2026-04-30"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                }
+                            ]
+                        },
+                        "description": "Get top performing rooms by revenue/occupancy.\n\nRoles: `super_admin`, `admin`, `accountant`, `supervisor`, `receptionist`"
+                    }
+                },
+                {
+                    "name": "Guest Stats",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/reports/guests?startDate=2026-04-01&endDate=2026-04-30",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "reports",
+                                "guests"
+                            ],
+                            "query": [
+                                {
+                                    "key": "startDate",
+                                    "value": "2026-04-01"
+                                },
+                                {
+                                    "key": "endDate",
+                                    "value": "2026-04-30"
+                                }
+                            ]
+                        },
+                        "description": "Get guest statistics.\n\nRoles: `super_admin`, `admin`, `accountant`, `supervisor`, `receptionist`"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Dashboard",
+            "description": "Dashboard statistics and analytics.",
+            "item": [
+                {
+                    "name": "Get Dashboard Stats",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/dashboard/stats",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "dashboard",
+                                "stats"
+                            ],
+                            "query": [
+                                {
+                                    "key": "stream",
+                                    "value": "true",
+                                    "disabled": true,
+                                    "description": "Set to true to receive stats as a Server-Sent Events stream"
+                                }
+                            ]
+                        },
+                        "description": "Get comprehensive dashboard statistics including overview, today's activity, revenue, inventory, orders, and notifications.\n\nSupports SSE streaming: add `?stream=true` to receive data as Server-Sent Events.\n\nRoles: `super_admin`, `admin`, `manager`, `supervisor`"
+                    }
+                },
+                {
+                    "name": "Get Dashboard Stats (POST)",
+                    "request": {
+                        "method": "POST",
+                        "url": {
+                            "raw": "{{baseUrl}}/dashboard/stats",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "dashboard",
+                                "stats"
+                            ]
+                        },
+                        "description": "Same as GET /dashboard/stats but via POST. Useful when query params are not convenient.\n\nRoles: `super_admin`, `admin`, `manager`, `supervisor`"
+                    }
+                },
+                {
+                    "name": "Get Occupancy Stats",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/dashboard/occupancy",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "dashboard",
+                                "occupancy"
+                            ],
+                            "query": [
+                                {
+                                    "key": "startDate",
+                                    "value": "",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "endDate",
+                                    "value": "",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "Get occupancy statistics for the dashboard.\n\nRoles: `super_admin`, `admin`, `manager`, `supervisor`"
+                    }
+                },
+                {
+                    "name": "Get Revenue Stats",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/dashboard/revenue?period=monthly",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "dashboard",
+                                "revenue"
+                            ],
+                            "query": [
+                                {
+                                    "key": "period",
+                                    "value": "monthly",
+                                    "description": "monthly | weekly | daily"
+                                }
+                            ]
+                        },
+                        "description": "Get revenue statistics for the dashboard.\n\nRoles: `super_admin`, `admin`, `manager`, `supervisor`"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Notifications",
+            "description": "Activity log and notification management.",
+            "item": [
+                {
+                    "name": "Get Notifications",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/notifications?page=1&limit=20",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "notifications"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "20"
+                                },
+                                {
+                                    "key": "type",
+                                    "value": "",
+                                    "disabled": true,
+                                    "description": "info | success | warning | error"
+                                }
+                            ]
+                        },
+                        "description": "Get notifications for the authenticated user. Admins see all; other roles see their own and role-targeted notifications.\n\nRoles: `super_admin`, `admin`, `supervisor`, `kitchen_staff`, `waiter`, `accountant`"
+                    }
+                },
+                {
+                    "name": "Get Notification Stats",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/notifications/stats",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "notifications",
+                                "stats"
+                            ]
+                        },
+                        "description": "Get notification counts by type and unread count.\n\nRoles: `super_admin`, `admin`, `supervisor`, `kitchen_staff`, `waiter`, `accountant`"
+                    }
+                },
+                {
+                    "name": "Mark Notification as Read",
+                    "request": {
+                        "method": "PATCH",
+                        "url": {
+                            "raw": "{{baseUrl}}/notifications/:id/read",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "notifications",
+                                ":id",
+                                "read"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "uuid-here"
+                                }
+                            ]
+                        },
+                        "description": "Mark a notification as read.\n\nRoles: `super_admin`, `admin`, `supervisor`, `kitchen_staff`, `waiter`, `accountant`"
+                    }
+                },
+                {
+                    "name": "Clear All Notifications",
+                    "request": {
+                        "method": "DELETE",
+                        "url": {
+                            "raw": "{{baseUrl}}/notifications/clear-all",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "notifications",
+                                "clear-all"
+                            ]
+                        },
+                        "description": "Permanently delete all notifications.\n\nRoles: `super_admin` only"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Uploads",
+            "description": "Image upload management via Cloudinary. All requests use multipart/form-data.",
+            "item": [
+                {
+                    "name": "Upload Profile Image",
+                    "request": {
+                        "method": "POST",
+                        "url": {
+                            "raw": "{{baseUrl}}/uploads/profile",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "uploads",
+                                "profile"
+                            ]
+                        },
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "image",
+                                    "type": "file",
+                                    "src": ""
+                                }
+                            ]
+                        },
+                        "description": "Upload a profile image for the authenticated user. All authenticated users."
+                    }
+                },
+                {
+                    "name": "Upload Room Image",
+                    "request": {
+                        "method": "POST",
+                        "url": {
+                            "raw": "{{baseUrl}}/uploads/room/:roomId",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "uploads",
+                                "room",
+                                ":roomId"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "roomId",
+                                    "value": "uuid-here"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "image",
+                                    "type": "file",
+                                    "src": ""
+                                }
+                            ]
+                        },
+                        "description": "Upload a single image for a room.\n\nRoles: `super_admin`, `admin`, `manager`, `receptionist`, `accountant`, `supervisor`"
+                    }
+                },
+                {
+                    "name": "Upload Multiple Room Images",
+                    "request": {
+                        "method": "POST",
+                        "url": {
+                            "raw": "{{baseUrl}}/uploads/room/:roomId/multiple",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "uploads",
+                                "room",
+                                ":roomId",
+                                "multiple"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "roomId",
+                                    "value": "uuid-here"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "images",
+                                    "type": "file",
+                                    "src": ""
+                                },
+                                {
+                                    "key": "images",
+                                    "type": "file",
+                                    "src": ""
+                                }
+                            ]
+                        },
+                        "description": "Upload multiple images for a room.\n\nRoles: `super_admin`, `admin`, `manager`, `receptionist`, `accountant`, `supervisor`"
+                    }
+                },
+                {
+                    "name": "Upload Menu Item Image",
+                    "request": {
+                        "method": "POST",
+                        "url": {
+                            "raw": "{{baseUrl}}/uploads/menu/:menuItemId",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "uploads",
+                                "menu",
+                                ":menuItemId"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "menuItemId",
+                                    "value": "uuid-here"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "image",
+                                    "type": "file",
+                                    "src": ""
+                                }
+                            ]
+                        },
+                        "description": "Upload an image for a menu item.\n\nRoles: `super_admin`, `admin`, `manager`, `restaurant_staff`, `kitchen_staff`, `accountant`, `supervisor`"
+                    }
+                },
+                {
+                    "name": "Upload Bar Item Image",
+                    "request": {
+                        "method": "POST",
+                        "url": {
+                            "raw": "{{baseUrl}}/uploads/bar/:barItemId",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "uploads",
+                                "bar",
+                                ":barItemId"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "barItemId",
+                                    "value": "uuid-here"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "image",
+                                    "type": "file",
+                                    "src": ""
+                                }
+                            ]
+                        },
+                        "description": "Upload an image for a bar item.\n\nRoles: `super_admin`, `admin`, `manager`, `bar_staff`, `waiter`, `accountant`, `supervisor`"
+                    }
+                },
+                {
+                    "name": "Upload with Size Limit",
+                    "request": {
+                        "method": "POST",
+                        "url": {
+                            "raw": "{{baseUrl}}/uploads/with-size-limit",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "uploads",
+                                "with-size-limit"
+                            ]
+                        },
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "image",
+                                    "type": "file",
+                                    "src": ""
+                                }
+                            ]
+                        },
+                        "description": "Upload an image with a strict size limit enforced.\n\nRoles: `super_admin`, `admin`, `manager`"
+                    }
+                },
+                {
+                    "name": "Delete Image",
+                    "request": {
+                        "method": "DELETE",
+                        "url": {
+                            "raw": "{{baseUrl}}/uploads/:publicId",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "uploads",
+                                ":publicId"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "publicId",
+                                    "value": "cloudinary-public-id"
+                                }
+                            ]
+                        },
+                        "description": "Delete an image from Cloudinary by its public ID.\n\nRoles: `super_admin`, `admin`, `manager`"
+                    }
+                },
+                {
+                    "name": "Get Upload Stats",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/uploads/stats",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "uploads",
+                                "stats"
+                            ]
+                        },
+                        "description": "Get upload statistics. All authenticated users."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Data Clear",
+            "description": "Bulk data management. Restricted to admins.",
+            "item": [
+                {
+                    "name": "Get Data Summary",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/data-clear/summary",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "data-clear",
+                                "summary"
+                            ]
+                        },
+                        "description": "Get a summary of all data in the system before clearing.\n\nRoles: `super_admin`, `admin`"
+                    }
+                },
+                {
+                    "name": "Clear All Data",
+                    "request": {
+                        "method": "DELETE",
+                        "url": {
+                            "raw": "{{baseUrl}}/data-clear/clear-all",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "data-clear",
+                                "clear-all"
+                            ]
+                        },
+                        "description": "⚠️ DESTRUCTIVE — Permanently delete all data from the system. This action cannot be undone.\n\nRoles: `super_admin` only"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Health & Monitoring",
+            "description": "Server health and metrics endpoints.",
+            "item": [
+                {
+                    "name": "Health Check",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "GET",
+                        "url": {
+                            "raw": "http://localhost:3000/health",
+                            "raw": "http://localhost:3000/health"
+                        },
+                        "description": "Check if the server is running and healthy."
+                    }
+                },
+                {
+                    "name": "Metrics",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "GET",
+                        "url": {
+                            "raw": "http://localhost:3000/metrics",
+                            "raw": "http://localhost:3000/metrics"
+                        },
+                        "description": "Get server performance metrics."
+                    }
+                }
+            ]
+        }
+    ]
+}
